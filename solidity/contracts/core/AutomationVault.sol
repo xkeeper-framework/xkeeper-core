@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {IAutomationVault} from '@interfaces/core/IAutomationVault.sol';
+import {IHook} from '@interfaces/periphery/IHook.sol';
 import {IERC20, SafeERC20} from '@openzeppelin/token/ERC20/utils/SafeERC20.sol';
 import {EnumerableSet} from '@openzeppelin/utils/structs/EnumerableSet.sol';
 import {_ALL} from '@utils/Constants.sol';
@@ -483,7 +484,7 @@ contract AutomationVault is IAutomationVault {
       ) {
         bytes memory _returnData;
         // Execute the pre hook and then the job if the pre hook is successful with the returned data
-        (_success, _returnData) = _hookData.preHook.call(_dataToExecute.jobData);
+        (_success, _returnData) = IHook(_hookData.preHook).preHook(_relayCaller, msg.sender, _dataToExecute.jobData);
         if (!_success) revert AutomationVault_ExecFailed();
 
         (_success,) = _dataToExecute.job.call(_returnData);
@@ -496,7 +497,7 @@ contract AutomationVault is IAutomationVault {
           || _hookData.selectorType == JobSelectorType.ENABLED_WITH_BOTHHOOKS
       ) {
         // Execute the post hook and check if it was successful
-        (_success,) = _hookData.postHook.call('');
+        _success = IHook(_hookData.postHook).postHook(_relayCaller, msg.sender, _dataToExecute.jobData);
         if (!_success) revert AutomationVault_ExecFailed();
       }
 
