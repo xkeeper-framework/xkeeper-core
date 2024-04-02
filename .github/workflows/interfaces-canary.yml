@@ -36,7 +36,7 @@ jobs:
       - name: Export Solidity - ${{ matrix.export_type }}
         uses: defi-wonderland/solidity-exporter-action@v2.0.0
         with:
-          package_name: '@defi-wonderland/xkeeper'
+          package_name: '@defi-wonderland/xkeeper-${{ matrix.export_type }}'
           out: 'out'
           interfaces: 'solidity/interfaces'
           contracts: 'solidity/contracts'
