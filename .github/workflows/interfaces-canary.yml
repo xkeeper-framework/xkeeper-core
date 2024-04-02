@@ -45,4 +45,4 @@ jobs:
       - name: Publish
         run: cd export/@defi-wonderland/xkeeper-${{ matrix.export_type }}-${{ matrix.export_type }} && npm publish --access public
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
