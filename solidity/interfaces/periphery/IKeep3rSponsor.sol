@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.19;
 
-import {IAutomationVault, IOpenRelay} from '@interfaces/relays/IOpenRelay.sol';
+import {IAutomationVault, IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
+import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
 
 interface IKeep3rSponsor {
   /*///////////////////////////////////////////////////////////////
@@ -77,6 +78,12 @@ interface IKeep3rSponsor {
   /*///////////////////////////////////////////////////////////////
                         VIEW FUNCTIONS
   //////////////////////////////////////////////////////////////*/
+
+  /**
+   * @notice Returns the keep3rV2 contract
+   * @return _keep3rV2 The address of the keep3rV2 contract
+   */
+  function KEEP3R_V2() external view returns (IKeep3rV2 _keep3rV2);
 
   /**
    * @notice Returns the open relay

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.19;
 
-import {IKeep3rSponsor} from '@interfaces/periphery/IKeep3rSponsor.sol';
-import {IAutomationVault, IOpenRelay} from '@interfaces/relays/IOpenRelay.sol';
-import {EnumerableSet} from '@openzeppelin/utils/structs/EnumerableSet.sol';
-import {_KEEP3R_V2} from '@utils/Constants.sol';
+import {IKeep3rSponsor, IKeep3rV2} from '../../interfaces/periphery/IKeep3rSponsor.sol';
+import {IAutomationVault, IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
+import {EnumerableSet} from 'openzeppelin/utils/structs/EnumerableSet.sol';
 
 /**
  * @title  Keep3rSponsor
@@ -13,6 +12,9 @@ import {_KEEP3R_V2} from '@utils/Constants.sol';
 
 contract Keep3rSponsor is IKeep3rSponsor {
   using EnumerableSet for EnumerableSet.AddressSet;
+
+  /// @inheritdoc IKeep3rSponsor
+  IKeep3rV2 public immutable KEEP3R_V2;
 
   /// @inheritdoc IKeep3rSponsor
   IOpenRelay public openRelay;
@@ -36,10 +38,11 @@ contract Keep3rSponsor is IKeep3rSponsor {
    * @param _feeRecipient The address of the fee recipient
    * @param _openRelay The address of the open relay
    */
-  constructor(address _owner, address _feeRecipient, IOpenRelay _openRelay) {
+  constructor(address _owner, address _feeRecipient, IOpenRelay _openRelay, IKeep3rV2 _keep3rV2) {
     openRelay = _openRelay;
     owner = _owner;
     feeRecipient = _feeRecipient;
+    KEEP3R_V2 = _keep3rV2;
   }
 
   /// @inheritdoc IKeep3rSponsor
@@ -106,12 +109,12 @@ contract Keep3rSponsor is IKeep3rSponsor {
     }
 
     // The first call to `isKeeper` ensures the caller is a valid keeper
-    bool _isKeeper = _KEEP3R_V2.isKeeper(msg.sender);
+    bool _isKeeper = KEEP3R_V2.isKeeper(msg.sender);
     if (!_isKeeper) revert Keep3rSponsor_NotKeeper();
 
     openRelay.exec(_automationVault, _execData, feeRecipient);
 
-    _KEEP3R_V2.worked(msg.sender);
+    KEEP3R_V2.worked(msg.sender);
   }
 
   /**

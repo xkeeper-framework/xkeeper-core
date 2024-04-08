@@ -9,9 +9,8 @@ import {
   IOpenRelay,
   IAutomationVault,
   EnumerableSet
-} from '@contracts/periphery/Keep3rSponsor.sol';
-import {IKeep3rV2} from '@interfaces/external/IKeep3rV2.sol';
-import {_KEEP3R_V2} from '@utils/Constants.sol';
+} from '../../contracts/periphery/Keep3rSponsor.sol';
+import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
 
 contract Keep3rSponsorForTest is Keep3rSponsor {
   using EnumerableSet for EnumerableSet.AddressSet;
@@ -19,8 +18,9 @@ contract Keep3rSponsorForTest is Keep3rSponsor {
   constructor(
     address _owner,
     address _feeRecipient,
-    IOpenRelay _openRelay
-  ) Keep3rSponsor(_owner, _feeRecipient, _openRelay) {}
+    IOpenRelay _openRelay,
+    IKeep3rV2 _keep3rV2
+  ) Keep3rSponsor(_owner, _feeRecipient, _openRelay, _keep3rV2) {}
 
   function addSponsorJobsForTest(address[] memory _jobs) external {
     for (uint256 _i; _i < _jobs.length;) {
@@ -53,7 +53,9 @@ contract Keep3rSponsorUnitTest is Test {
   // Keep3rSponsor contract
   Keep3rSponsorForTest public keep3rSponsor;
 
+  // External contracts
   IOpenRelay public openRelay;
+  IKeep3rV2 public keep3rV2;
 
   /// EOAs
   address public owner;
@@ -66,8 +68,9 @@ contract Keep3rSponsorUnitTest is Test {
     feeRecipient = makeAddr('FeeRecipient');
 
     openRelay = IOpenRelay(makeAddr('OpenRelay'));
+    keep3rV2 = IKeep3rV2(makeAddr('Keep3rV2'));
 
-    keep3rSponsor = new Keep3rSponsorForTest(owner, feeRecipient, openRelay);
+    keep3rSponsor = new Keep3rSponsorForTest(owner, feeRecipient, openRelay, keep3rV2);
   }
 
   /**
@@ -84,6 +87,7 @@ contract UnitKeep3rSponsorConstructor is Keep3rSponsorUnitTest {
     assertEq(keep3rSponsor.owner(), owner);
     assertEq(keep3rSponsor.feeRecipient(), feeRecipient);
     assertEq(address(keep3rSponsor.openRelay()), address(openRelay));
+    assertEq(address(keep3rSponsor.KEEP3R_V2()), address(keep3rV2));
   }
 }
 
@@ -344,16 +348,14 @@ contract UnitKeep3rSponsorExec is Keep3rSponsorUnitTest {
 
     keep3rSponsor.addSponsorJobsForTest(_cleanJobs.values());
 
-    vm.mockCall(
-      address(_KEEP3R_V2), abi.encodeWithSelector(IKeep3rV2.isKeeper.selector, address(this)), abi.encode(true)
-    );
+    vm.mockCall(address(keep3rV2), abi.encodeWithSelector(IKeep3rV2.isKeeper.selector, address(this)), abi.encode(true));
 
     vm.mockCall(
       address(openRelay),
       abi.encodeWithSelector(IOpenRelay.exec.selector, _automationVault, _execData, feeRecipient),
       abi.encode(true)
     );
-    vm.mockCall(address(_KEEP3R_V2), abi.encodeWithSelector(IKeep3rV2.worked.selector, address(this)), abi.encode(true));
+    vm.mockCall(address(keep3rV2), abi.encodeWithSelector(IKeep3rV2.worked.selector, address(this)), abi.encode(true));
     _;
   }
 
@@ -376,7 +378,7 @@ contract UnitKeep3rSponsorExec is Keep3rSponsorUnitTest {
     vm.expectRevert(abi.encodeWithSelector(IKeep3rSponsor.Keep3rSponsor_NotKeeper.selector));
 
     vm.mockCall(
-      address(_KEEP3R_V2), abi.encodeWithSelector(IKeep3rV2.isKeeper.selector, address(this)), abi.encode(false)
+      address(keep3rV2), abi.encodeWithSelector(IKeep3rV2.isKeeper.selector, address(this)), abi.encode(false)
     );
 
     keep3rSponsor.exec(_automationVault, _execData);
@@ -389,7 +391,7 @@ contract UnitKeep3rSponsorExec is Keep3rSponsorUnitTest {
     vm.expectCall(
       address(openRelay), abi.encodeWithSelector(IOpenRelay.exec.selector, _automationVault, _execData, feeRecipient)
     );
-    vm.expectCall(address(_KEEP3R_V2), abi.encodeWithSelector(IKeep3rV2.worked.selector, address(this)));
+    vm.expectCall(address(keep3rV2), abi.encodeWithSelector(IKeep3rV2.worked.selector, address(this)));
 
     keep3rSponsor.exec(_automationVault, _execData);
   }

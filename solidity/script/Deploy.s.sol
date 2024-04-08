@@ -31,7 +31,7 @@ abstract contract Deploy is Script {
   IKeep3rRelay public keep3rRelay;
   IKeep3rBondedRelay public keep3rBondedRelay;
 
-  // Metadata
+  // Periphery contracts
   IXKeeperMetadata public xKeeperMetadata;
 
   // External contracts
