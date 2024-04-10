@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {IAutomationVault, IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
 import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
+import {IKeep3rHelper} from '../../interfaces/external/IKeep3rHelper.sol';
 
 interface IKeep3rSponsor {
   /*///////////////////////////////////////////////////////////////
@@ -40,6 +41,12 @@ interface IKeep3rSponsor {
   event OpenRelaySetted(IOpenRelay indexed _openRelay);
 
   /**
+   * @notice Emitted when the bonus is setted
+   * @param _bonus The sponsored bonus
+   */
+  event BonusSetted(uint256 indexed _bonus);
+
+  /**
    * @notice Emitted when a sponsored job is approved
    * @param  _job The address of the sponsored job
    */
@@ -75,6 +82,11 @@ interface IKeep3rSponsor {
    */
   error Keep3rSponsor_NotKeeper();
 
+  /**
+   * @notice Thrown when the exec data is empty
+   */
+  error Keep3rSponsor_NoJobs();
+
   /*///////////////////////////////////////////////////////////////
                         VIEW FUNCTIONS
   //////////////////////////////////////////////////////////////*/
@@ -84,6 +96,25 @@ interface IKeep3rSponsor {
    * @return _keep3rV2 The address of the keep3rV2 contract
    */
   function KEEP3R_V2() external view returns (IKeep3rV2 _keep3rV2);
+
+  /**
+   * @notice Returns the keep3r helper contract
+   * @return _keep3rHelper The address of the keep3r helper contract
+   */
+  function KEEP3R_HELPER() external view returns (IKeep3rHelper _keep3rHelper);
+
+  /**
+   * @notice Returns the base
+   * @return _base The base
+   */
+  function BASE() external view returns (uint32 _base);
+
+  /**
+   * @notice Returns the bonus
+   * @dev  The bonus is in base 10_000
+   * @return _bonus The bonus
+   */
+  function bonus() external view returns (uint256 _bonus);
 
   /**
    * @notice Returns the open relay
@@ -142,6 +173,12 @@ interface IKeep3rSponsor {
    * @param _openRelay The address of the open relay
    */
   function setOpenRelay(IOpenRelay _openRelay) external;
+
+  /**
+   * @notice Sets the bonus
+   * @param _bonus The bonus
+   */
+  function setBonus(uint256 _bonus) external;
 
   /**
    * @notice Adds a job to the sponsored list

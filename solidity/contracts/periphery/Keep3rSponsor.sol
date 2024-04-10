@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.19;
 
-import {IKeep3rSponsor, IKeep3rV2} from '../../interfaces/periphery/IKeep3rSponsor.sol';
-import {IAutomationVault, IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
 import {EnumerableSet} from 'openzeppelin/utils/structs/EnumerableSet.sol';
+
+import {IKeep3rSponsor, IKeep3rV2, IKeep3rHelper} from '../../interfaces/periphery/IKeep3rSponsor.sol';
+import {IAutomationVault, IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
 
 /**
  * @title  Keep3rSponsor
@@ -15,6 +16,15 @@ contract Keep3rSponsor is IKeep3rSponsor {
 
   /// @inheritdoc IKeep3rSponsor
   IKeep3rV2 public immutable KEEP3R_V2;
+
+  /// @inheritdoc IKeep3rSponsor
+  IKeep3rHelper public immutable KEEP3R_HELPER;
+
+  /// @inheritdoc IKeep3rSponsor
+  uint32 public immutable BASE = 10_000;
+
+  /// @inheritdoc IKeep3rSponsor
+  uint256 public bonus = 15_000;
 
   /// @inheritdoc IKeep3rSponsor
   IOpenRelay public openRelay;
@@ -37,12 +47,21 @@ contract Keep3rSponsor is IKeep3rSponsor {
    * @param _owner The address of the owner
    * @param _feeRecipient The address of the fee recipient
    * @param _openRelay The address of the open relay
+   * @param _keep3rV2 The address of the keep3rV2
+   * @param _keep3rHelper The address of the keep3rHelper
    */
-  constructor(address _owner, address _feeRecipient, IOpenRelay _openRelay, IKeep3rV2 _keep3rV2) {
-    openRelay = _openRelay;
+  constructor(
+    address _owner,
+    address _feeRecipient,
+    IOpenRelay _openRelay,
+    IKeep3rV2 _keep3rV2,
+    IKeep3rHelper _keep3rHelper
+  ) {
     owner = _owner;
     feeRecipient = _feeRecipient;
+    openRelay = _openRelay;
     KEEP3R_V2 = _keep3rV2;
+    KEEP3R_HELPER = _keep3rHelper;
   }
 
   /// @inheritdoc IKeep3rSponsor
@@ -76,6 +95,12 @@ contract Keep3rSponsor is IKeep3rSponsor {
   }
 
   /// @inheritdoc IKeep3rSponsor
+  function setBonus(uint256 _bonus) external onlyOwner {
+    bonus = _bonus;
+    emit BonusSetted(_bonus);
+  }
+
+  /// @inheritdoc IKeep3rSponsor
   function addSponsoredJobs(address[] calldata _jobs) public onlyOwner {
     for (uint256 _i; _i < _jobs.length;) {
       _sponsoredJobs.add(_jobs[_i]);
@@ -100,6 +125,13 @@ contract Keep3rSponsor is IKeep3rSponsor {
   }
 
   function exec(IAutomationVault _automationVault, IAutomationVault.ExecData[] calldata _execData) external {
+    if (_execData.length == 0) revert Keep3rSponsor_NoJobs();
+
+    // The first call to `isKeeper` ensures the caller is a valid keeper
+    bool _isKeeper = KEEP3R_V2.isKeeper(msg.sender);
+    if (!_isKeeper) revert Keep3rSponsor_NotKeeper();
+    uint256 _initialGas = gasleft();
+
     for (uint256 _i; _i < _execData.length;) {
       if (!_sponsoredJobs.contains(_execData[_i].job)) revert Keep3rSponsor_JobNotSponsored();
 
@@ -108,13 +140,12 @@ contract Keep3rSponsor is IKeep3rSponsor {
       }
     }
 
-    // The first call to `isKeeper` ensures the caller is a valid keeper
-    bool _isKeeper = KEEP3R_V2.isKeeper(msg.sender);
-    if (!_isKeeper) revert Keep3rSponsor_NotKeeper();
-
     openRelay.exec(_automationVault, _execData, feeRecipient);
 
-    KEEP3R_V2.worked(msg.sender);
+    uint256 _gasAfterWork = gasleft();
+    uint256 _reward = IKeep3rHelper(KEEP3R_HELPER).getRewardAmountFor(msg.sender, _initialGas - _gasAfterWork);
+    _reward = (_reward * bonus) / BASE;
+    KEEP3R_V2.bondedPayment(msg.sender, _reward);
   }
 
   /**
