@@ -240,19 +240,32 @@ contract UnitKeep3rSponsorSetOpenRelay is Keep3rSponsorUnitTest {
 }
 
 contract UnitKeep3rSponsorSetBonus is Keep3rSponsorUnitTest {
-  function setUp() public override {
-    Keep3rSponsorUnitTest.setUp();
-
+  modifier happyPath(uint256 _bonus) {
+    vm.assume(_bonus > keep3rSponsor.BASE());
     vm.startPrank(owner);
+    _;
   }
 
-  function testSetBonus(uint256 _bonus) public {
+  function testRevertIfCallerIsNotOwner(uint256 _bonus) public happyPath(_bonus) {
+    _revertOnlyOwner();
+    keep3rSponsor.setBonus(_bonus);
+  }
+
+  function testRevertIfBonusIsLow(uint256 _bonus) public {
+    vm.assume(_bonus < keep3rSponsor.BASE());
+    vm.startPrank(owner);
+    vm.expectRevert(abi.encodeWithSelector(IKeep3rSponsor.Keep3rSponsor_LowBonus.selector));
+
+    keep3rSponsor.setBonus(_bonus);
+  }
+
+  function testSetBonus(uint256 _bonus) public happyPath(_bonus) {
     keep3rSponsor.setBonus(_bonus);
 
     assertEq(keep3rSponsor.bonus(), _bonus);
   }
 
-  function testEmitBonusSetted(uint256 _bonus) public {
+  function testEmitBonusSetted(uint256 _bonus) public happyPath(_bonus) {
     vm.expectEmit();
     emit BonusSetted(_bonus);
 
@@ -455,16 +468,16 @@ contract UnitKeep3rSponsorExec is Keep3rSponsorUnitTest {
       address(keep3rHelper), abi.encodeWithSelector(IKeep3rHelper.getRewardAmountFor.selector), abi.encode(_reward)
     );
 
-    uint256 rewardWithBonus = (_reward * keep3rSponsor.bonus()) / keep3rSponsor.BASE();
+    uint256 _rewardWithBonus = (_reward * keep3rSponsor.bonus()) / keep3rSponsor.BASE();
 
     vm.mockCall(
       address(keep3rV2),
-      abi.encodeWithSelector(IKeep3rV2.bondedPayment.selector, address(this), rewardWithBonus),
+      abi.encodeWithSelector(IKeep3rV2.bondedPayment.selector, address(this), _rewardWithBonus),
       abi.encode(true)
     );
 
     vm.expectCall(
-      address(keep3rV2), abi.encodeWithSelector(IKeep3rV2.bondedPayment.selector, address(this), rewardWithBonus)
+      address(keep3rV2), abi.encodeWithSelector(IKeep3rV2.bondedPayment.selector, address(this), _rewardWithBonus)
     );
 
     keep3rSponsor.exec(_automationVault, _execData);

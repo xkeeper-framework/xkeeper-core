@@ -96,6 +96,7 @@ contract Keep3rSponsor is IKeep3rSponsor {
 
   /// @inheritdoc IKeep3rSponsor
   function setBonus(uint256 _bonus) external onlyOwner {
+    if (_bonus < BASE) revert Keep3rSponsor_LowBonus();
     bonus = _bonus;
     emit BonusSetted(_bonus);
   }
@@ -130,7 +131,6 @@ contract Keep3rSponsor is IKeep3rSponsor {
     // The first call to `isKeeper` ensures the caller is a valid keeper
     bool _isKeeper = KEEP3R_V2.isKeeper(msg.sender);
     if (!_isKeeper) revert Keep3rSponsor_NotKeeper();
-    uint256 _initialGas = gasleft();
 
     for (uint256 _i; _i < _execData.length;) {
       if (!_sponsoredJobs.contains(_execData[_i].job)) revert Keep3rSponsor_JobNotSponsored();
@@ -140,9 +140,10 @@ contract Keep3rSponsor is IKeep3rSponsor {
       }
     }
 
+    uint256 _initialGas = gasleft();
     openRelay.exec(_automationVault, _execData, feeRecipient);
-
     uint256 _gasAfterWork = gasleft();
+
     uint256 _reward = IKeep3rHelper(KEEP3R_HELPER).getRewardAmountFor(msg.sender, _initialGas - _gasAfterWork);
     _reward = (_reward * bonus) / BASE;
     KEEP3R_V2.bondedPayment(msg.sender, _reward);

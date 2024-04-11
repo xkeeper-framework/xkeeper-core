@@ -87,6 +87,11 @@ interface IKeep3rSponsor {
    */
   error Keep3rSponsor_NoJobs();
 
+  /**
+   * @notice Thrown when the bonus is lower than the base
+   */
+  error Keep3rSponsor_LowBonus();
+
   /*///////////////////////////////////////////////////////////////
                         VIEW FUNCTIONS
   //////////////////////////////////////////////////////////////*/
