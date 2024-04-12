@@ -13,6 +13,7 @@ import {XKeeperMetadata, IXKeeperMetadata} from '../contracts/periphery/XKeeperM
 import {_NATIVE_TOKEN} from '../utils/Constants.sol';
 import {IAutomate} from '../interfaces/external/IAutomate.sol';
 import {IKeep3rV2} from '../interfaces/external/IKeep3rV2.sol';
+import {IKeep3rSponsor} from '../interfaces/periphery/IKeep3rSponsor.sol';
 
 abstract contract Deploy is Script {
   // When new contracts need to be deployed, make sure to update the salt version to avoid address collition
@@ -37,6 +38,7 @@ abstract contract Deploy is Script {
   // External contracts
   IAutomate public gelatoAutomate;
   IKeep3rV2 public keep3rV2;
+  IKeep3rSponsor public keep3rSponsor;
 
   // AutomationVault params
   address public owner;
