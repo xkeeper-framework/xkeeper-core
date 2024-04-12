@@ -102,7 +102,7 @@ contract IntegrationKeep3rSponsor is CommonIntegrationTest {
 
   function test_executeAndGetPaymentFromKeep3r(uint64 _fee, uint8 _howHard) public {
     vm.assume(_howHard > 20);
-    vm.assume(_fee > 1 && _fee < 400);
+    vm.assume(_fee > 30 gwei && _fee < 200 gwei);
     vm.fee(_fee);
 
     // Bond and activate keep3r
@@ -141,7 +141,7 @@ contract IntegrationKeep3rSponsor is CommonIntegrationTest {
 
   function test_executeAndGetPaymentFromOpenRelayToGovernance(uint64 _fee, uint8 _howHard) public {
     vm.assume(_howHard > 20);
-    vm.assume(_fee > 1 && _fee < 400);
+    vm.assume(_fee > 30 gwei && _fee < 200 gwei);
     vm.fee(_fee);
 
     // Bond and activate keep3r
