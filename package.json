@@ -1,11 +1,11 @@
 {
-  "name": "xkeeper",
+  "name": "@xkeeper-framework/xkeeper-core",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://github.com/defi-wonderland/xkeeper-core#readme",
+  "homepage": "https://github.com/xkeeper-framework/xkeeper-core/#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/defi-wonderland/xkeeper-core.git"
+    "url": "git+https://github.com/xkeeper-framework/xkeeper-core.git"
   },
   "license": "AGPL-3.0",
   "author": "Wonderland",

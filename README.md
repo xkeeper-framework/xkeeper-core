@@ -1,6 +1,6 @@
 # xKeeper Core
 
-[License: AGPL-3.0](https://github.com/defi-wonderland/xkeeper-core/blob/main/LICENSE)
+[License: AGPL-3.0](https://github.com/xkeeper-framework/xkeeper-core/blob/main/LICENSE)
 
 ⚠️ The code has not been audited yet, tread with caution.
 
