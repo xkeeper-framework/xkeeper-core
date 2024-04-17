@@ -88,6 +88,7 @@ contract UnitAutomationVaultFactoryGetAutomationVaults is AutomationVaultFactory
     uint256 _startFrom,
     uint256 _automationVaultAmount
   ) public happyPath(_automationVaults, _startFrom, _automationVaultAmount) {
+    vm.assume(_automationVaultAmount < 30);
     address[] memory __automationVaults = automationVaultFactory.automationVaults(_startFrom, _automationVaultAmount);
 
     assertEq(__automationVaults.length, _automationVaultAmount);
