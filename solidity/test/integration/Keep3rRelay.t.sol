@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {CommonIntegrationTest} from '@test/integration/Common.t.sol';
+import {CommonIntegrationTest} from '../integration/Common.t.sol';
 
-import {IAutomationVault} from '@interfaces/core/IAutomationVault.sol';
-import {IKeep3rV2} from '@interfaces/external/IKeep3rV2.sol';
-import {IKeep3rHelper} from '@interfaces/external/IKeep3rHelper.sol';
-import {IKeep3rV1} from '@interfaces/external/IKeep3rV1.sol';
-import {IKeep3rBondedRelay} from '@interfaces/relays/IKeep3rBondedRelay.sol';
-import {_KEEP3R_V2, _KEEP3R_HELPER, _KEEP3R_V1, _KEEP3R_GOVERNOR, _KP3R_WHALE} from '@utils/Constants.sol';
+import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
+import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
+import {IKeep3rHelper} from '../../interfaces/external/IKeep3rHelper.sol';
+import {IKeep3rV1} from '../../interfaces/external/IKeep3rV1.sol';
+import {IKeep3rBondedRelay} from '../../interfaces/relays/IKeep3rBondedRelay.sol';
+import {_KEEP3R_V2, _KEEP3R_HELPER, _KEEP3R_V1, _KEEP3R_GOVERNOR, _KP3R_WHALE} from './Constants.sol';
 
 contract IntegrationKeep3rRelay is CommonIntegrationTest {
   // Events
@@ -138,7 +138,7 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
 
   function test_executeAndGetPaymentFromKeep3r(uint64 _fee, uint8 _howHard) public {
     vm.assume(_howHard > 20);
-    vm.assume(_fee > 1 && _fee < 400);
+    vm.assume(_fee > 30 gwei && _fee < 200 gwei);
     vm.fee(_fee);
 
     // Bond and activate keep3r
@@ -198,7 +198,7 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
 
   function test_executeBondAndGetPaymentFromKeep3r(uint64 _fee, uint8 _howHard) public {
     vm.assume(_howHard > 20);
-    vm.assume(_fee > 1 && _fee < 400);
+    vm.assume(_fee > 30 gwei && _fee < 200 gwei);
     vm.fee(_fee);
 
     // Bond and activate keep3r

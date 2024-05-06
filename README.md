@@ -1,12 +1,17 @@
-# XKeeper Core
+# xKeeper Core
 
-[License: AGPL-3.0](https://github.com/defi-wonderland/xkeeper-core/blob/main/LICENSE)
+[License: AGPL-3.0](https://github.com/xkeeper-framework/xkeeper-core/blob/main/LICENSE)
 
 ⚠️ The code has not been audited yet, tread with caution.
 
 ## Overview
 
-XKeeper is a public good for on-chain automation. It should be very easy to create a job which can be run both by Keep3r, Gelato, Autonolas, or any other keeper out there. We have also deployed compatible relays to ensure seamless integration, but XKeeper is designed to work with any keeper of your choice, providing you with the flexibility to select the one that best suits your needs.
+xKeeper is a keeper network aggregator which aims to decentralise the on-chain automation of DeFi. With xKeeper, using multiple keeper networks, such as Keep3r Network, Gelato, or others, will be a walk in the park.
+
+xKeeper is a fully modular framework, designed to be the backbone of future onchain automation.
+
+- App: [xkeeper.network](https://xkeeper.network/)
+- Documentation: [docs.xkeeper.network](https://docs.xkeeper.network/)
 
 ## Setup
 
@@ -21,7 +26,7 @@ yarn build
 
 ### Available Commands
 
-Make sure to set `MAINNET_RPC` environment variable before running integration tests.
+Make sure to set `ETHEREUM_MAINNET_RPC` environment variable before running integration tests.
 
 | Yarn Command            | Description                                                                                      |
 | ----------------------- | ------------------------------------------------------------------------------------------------ |
@@ -29,7 +34,7 @@ Make sure to set `MAINNET_RPC` environment variable before running integration t
 | `yarn coverage`         | See `forge coverage` report.                                                                     |
 | `yarn deploy:mainnet`   | Deploy the contracts to mainnet.                                                                 |
 | `yarn deploy:goerli`    | Deploy the contracts to goerli testnet                                                           |
-| `yarn docs:`            | Generate documentation with [`forge doc`](https://book.getfoundry.sh/reference/forge/forge-doc). |
+| `yarn docs:build`       | Generate documentation with [`forge doc`](https://book.getfoundry.sh/reference/forge/forge-doc). |
 | `yarn docs:run`         | Start the documentation server.                                                                  |
 | `yarn test`             | Run all unit and integration tests.                                                              |
 | `yarn test:unit`        | Run unit tests.                                                                                  |
@@ -38,11 +43,11 @@ Make sure to set `MAINNET_RPC` environment variable before running integration t
 
 ## Licensing
 
-The primary license for XKeeper contracts is AGPL-3.0, see [`LICENSE`](./LICENSE).
+The primary license for xKeeper contracts is AGPL-3.0, see [`LICENSE`](./LICENSE).
 
 ## Contributors
 
-XKeeper was built with ❤️ by [Wonderland](https://defi.sucks).
+xKeeper was built with ❤️ by [Wonderland](https://defi.sucks).
 
 Wonderland is the largest core development group in web3. Our commitment is to a financial future that's open, decentralized, and accessible to all.
 

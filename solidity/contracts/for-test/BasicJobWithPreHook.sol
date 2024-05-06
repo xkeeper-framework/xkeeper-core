@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {IBasicJobWithPreHook} from '@interfaces/for-test/IBasicJobWithPreHook.sol';
-import {IBasicJob} from '@interfaces/for-test/IBasicJob.sol';
+import {IBasicJobWithPreHook} from '../../interfaces/for-test/IBasicJobWithPreHook.sol';
+import {IBasicJob} from '../../interfaces/for-test/IBasicJob.sol';
 
 /**
  * @notice This contract is a basic job that can be automated by any automation vault

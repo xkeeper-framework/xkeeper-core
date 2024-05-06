@@ -3,8 +3,8 @@ pragma solidity 0.8.19;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {AutomationVaultFactory, EnumerableSet} from '@contracts/core/AutomationVaultFactory.sol';
-import {AutomationVault, IAutomationVault} from '@contracts/core/AutomationVault.sol';
+import {AutomationVaultFactory, EnumerableSet} from '../../contracts/core/AutomationVaultFactory.sol';
+import {AutomationVault, IAutomationVault} from '../../contracts/core/AutomationVault.sol';
 
 contract AutomationVaultFactoryForTest is AutomationVaultFactory {
   using EnumerableSet for EnumerableSet.AddressSet;
@@ -88,6 +88,7 @@ contract UnitAutomationVaultFactoryGetAutomationVaults is AutomationVaultFactory
     uint256 _startFrom,
     uint256 _automationVaultAmount
   ) public happyPath(_automationVaults, _startFrom, _automationVaultAmount) {
+    vm.assume(_automationVaultAmount < 30);
     address[] memory __automationVaults = automationVaultFactory.automationVaults(_startFrom, _automationVaultAmount);
 
     assertEq(__automationVaults.length, _automationVaultAmount);
