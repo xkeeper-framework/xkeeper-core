@@ -5,6 +5,7 @@ import {EnumerableSet} from 'openzeppelin/utils/structs/EnumerableSet.sol';
 import {IERC20, SafeERC20} from 'openzeppelin/token/ERC20/utils/SafeERC20.sol';
 
 import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
+import {IHook} from '../../interfaces/periphery/IHook.sol';
 import {_ALL} from '../../utils/Constants.sol';
 
 /**
@@ -33,9 +34,15 @@ contract AutomationVault is IAutomationVault {
   mapping(address _relay => EnumerableSet.AddressSet _jobs) internal _approvedJobs;
 
   /**
-   * @notice Selectors approved for a job to be executed by a relay
+   * @notice Selectors approved to be executed by a relay for a specific job and type
    */
-  mapping(address _relay => mapping(address _job => EnumerableSet.Bytes32Set _selectors)) internal _approvedJobSelectors;
+  mapping(address _relay => mapping(address _job => mapping(bytes4 _selector => IAutomationVault.HookData))) internal
+    _approvedJobSelectorsWithHooks;
+
+  /**
+   * @notice List of approved relays
+   */
+  mapping(address _relay => mapping(address _job => bytes4[] _selectors)) internal _approvedJobSelectorsList;
 
   /**
    * @notice List of approved relays
@@ -73,20 +80,20 @@ contract AutomationVault is IAutomationVault {
     // Get the list of jobs and their selectors
     for (uint256 _i; _i < _jobsLength;) {
       // Get the length of the selectors array
-      _selectorsLength = _approvedJobSelectors[_relay][_jobs[_i]].length();
+      _selectorsLength = _approvedJobSelectorsList[_relay][_jobs[_i]].length;
 
-      // Create the array of selectors
-      bytes4[] memory _selectors;
+      // Create the array of selectors data with the selectors length
+      SelectorData[] memory _selectorsData;
 
       // If the job has selectors, get them
       if (_selectorsLength != 0) {
         // Set the length of the selectors array
-        _selectors = new bytes4[](_selectorsLength);
+        _selectorsData = new SelectorData[](_selectorsLength);
 
         // Get the list of selectors
         for (uint256 _j; _j < _selectorsLength;) {
-          // Convert the bytes32 selector to bytes4
-          _selectors[_j] = bytes4(_approvedJobSelectors[_relay][_jobs[_i]].at(_j));
+          _selectorsData[_j].selector = _approvedJobSelectorsList[_relay][_jobs[_i]][_j];
+          _selectorsData[_j].hookData = _approvedJobSelectorsWithHooks[_relay][_jobs[_i]][_selectorsData[_j].selector];
 
           unchecked {
             ++_j;
@@ -95,7 +102,7 @@ contract AutomationVault is IAutomationVault {
       }
 
       // Add the job and its selectors to the full list
-      _jobsData[_i] = IAutomationVault.JobData(_jobs[_i], _selectors);
+      _jobsData[_i] = IAutomationVault.JobData(_jobs[_i], _selectorsData);
 
       unchecked {
         ++_i;
@@ -182,13 +189,34 @@ contract AutomationVault is IAutomationVault {
           emit ApproveJob(_jobData.job);
         }
 
-        // Get the length of the selectors array
-        _selectorsLength = _jobData.functionSelectors.length;
+        // Get the array of selectors data
+        SelectorData[] memory _selectorsData = _jobData.selectorsData;
+
+        // Get the length of the selectors data array
+        _selectorsLength = _selectorsData.length;
 
         // Set the selectors for the job
         for (_j = 0; _j < _selectorsLength;) {
-          if (_approvedJobSelectors[_relay][_jobData.job].add(_jobData.functionSelectors[_j])) {
-            emit ApproveJobSelector(_jobData.job, _jobData.functionSelectors[_j]);
+          // Check if selector already exists if it does, skip it
+          if (
+            _approvedJobSelectorsWithHooks[_relay][_jobData.job][_selectorsData[_j].selector].selectorType
+              == JobSelectorType.DISABLED
+          ) {
+            // Add the selector to the list of selectors
+            _approvedJobSelectorsList[_relay][_jobData.job].push(_selectorsData[_j].selector);
+
+            // Add the selector to the list of selectors with hooks
+            _approvedJobSelectorsWithHooks[_relay][_jobData.job][_selectorsData[_j].selector] =
+              _selectorsData[_j].hookData;
+
+            // Emit the event
+            emit ApproveJobSelector(
+              _jobData.job,
+              _selectorsData[_j].selector,
+              _selectorsData[_j].hookData.selectorType,
+              _selectorsData[_j].hookData.preHook,
+              _selectorsData[_j].hookData.postHook
+            );
           }
 
           unchecked {
@@ -236,7 +264,7 @@ contract AutomationVault is IAutomationVault {
     _valuesLength = _jobs.length;
 
     // Create the selector length variable
-    bytes32[] memory _selectors;
+    bytes4[] memory _selectors;
 
     // Create the length variable
     uint256 _selectorsLength;
@@ -246,14 +274,17 @@ contract AutomationVault is IAutomationVault {
       _approvedJobs[_relay].remove(_jobs[_i]);
 
       // Get the length of the selectors array
-      _selectorsLength = _approvedJobSelectors[_relay][_jobs[_i]].length();
+      _selectorsLength = _approvedJobSelectorsList[_relay][_jobs[_i]].length;
 
       // Get the list of selectors
-      _selectors = _approvedJobSelectors[_relay][_jobs[_i]].values();
+      _selectors = _approvedJobSelectorsList[_relay][_jobs[_i]];
+
+      // Delete selectors list
+      delete _approvedJobSelectorsList[_relay][_jobs[_i]];
 
       // Remove the selectors
       for (_j = 0; _j < _selectorsLength;) {
-        _approvedJobSelectors[_relay][_jobs[_i]].remove(_selectors[_j]);
+        delete _approvedJobSelectorsWithHooks[_relay][_jobs[_i]][bytes4(_selectors[_j])];
 
         unchecked {
           ++_j;
@@ -329,7 +360,7 @@ contract AutomationVault is IAutomationVault {
     uint256 _jobsLength = _jobs.length;
 
     // Create the selector length variable
-    bytes32[] memory _selectors;
+    bytes4[] memory _selectors;
 
     // Create the length variable
     uint256 _selectorsLength;
@@ -339,14 +370,17 @@ contract AutomationVault is IAutomationVault {
       _approvedJobs[_relay].remove(_jobs[_i]);
 
       // Get the length of the selectors array
-      _selectorsLength = _approvedJobSelectors[_relay][_jobs[_i]].length();
+      _selectorsLength = _approvedJobSelectorsList[_relay][_jobs[_i]].length;
 
       // Get the list of selectors
-      _selectors = _approvedJobSelectors[_relay][_jobs[_i]].values();
+      _selectors = _approvedJobSelectorsList[_relay][_jobs[_i]];
+
+      // Delete selectors list
+      delete _approvedJobSelectorsList[_relay][_jobs[_i]];
 
       // Remove the selectors
       for (_j = 0; _j < _selectorsLength;) {
-        _approvedJobSelectors[_relay][_jobs[_i]].remove(_selectors[_j]);
+        delete _approvedJobSelectorsWithHooks[_relay][_jobs[_i]][bytes4(_selectors[_j])];
 
         unchecked {
           ++_j;
@@ -372,13 +406,33 @@ contract AutomationVault is IAutomationVault {
           emit ApproveJob(_jobData.job);
         }
 
-        // Get the length of the selectors array
-        _selectorsLength = _jobData.functionSelectors.length;
+        // Get the array of selectors data
+        SelectorData[] memory _selectorsData = _jobData.selectorsData;
+
+        // Get the length of the selectors data array
+        _selectorsLength = _selectorsData.length;
 
         // Set the selectors for the job
         for (_j = 0; _j < _selectorsLength;) {
-          if (_approvedJobSelectors[_relay][_jobData.job].add(_jobData.functionSelectors[_j])) {
-            emit ApproveJobSelector(_jobData.job, _jobData.functionSelectors[_j]);
+          if (
+            _approvedJobSelectorsWithHooks[_relay][_jobData.job][_selectorsData[_j].selector].selectorType
+              == JobSelectorType.DISABLED
+          ) {
+            // Add the selector to the list of selectors
+            _approvedJobSelectorsList[_relay][_jobData.job].push(_selectorsData[_j].selector);
+
+            // Add the selector to the list of selectors with hooks
+            _approvedJobSelectorsWithHooks[_relay][_jobData.job][_selectorsData[_j].selector] =
+              _selectorsData[_j].hookData;
+
+            // Emit the event
+            emit ApproveJobSelector(
+              _jobData.job,
+              _selectorsData[_j].selector,
+              _selectorsData[_j].hookData.selectorType,
+              _selectorsData[_j].hookData.preHook,
+              _selectorsData[_j].hookData.postHook
+            );
           }
 
           unchecked {
@@ -410,12 +464,42 @@ contract AutomationVault is IAutomationVault {
     for (_i; _i < _dataLength;) {
       _dataToExecute = _execData[_i];
 
+      // Get the hook data
+      HookData memory _hookData =
+        _approvedJobSelectorsWithHooks[msg.sender][_dataToExecute.job][bytes4(_dataToExecute.jobData)];
+
+      bytes memory _executeData = _dataToExecute.jobData;
+
       // Check that the selector is approved to be called
-      if (!_approvedJobSelectors[msg.sender][_dataToExecute.job].contains(bytes4(_dataToExecute.jobData))) {
+      if (_hookData.selectorType == JobSelectorType.DISABLED) {
         revert AutomationVault_NotApprovedJobSelector();
       }
-      (_success,) = _dataToExecute.job.call(_dataToExecute.jobData);
+
+      // EXECUTE PRE-HOOK IF ENABLED
+      if (
+        _hookData.selectorType == JobSelectorType.ENABLED_WITH_PREHOOK
+          || _hookData.selectorType == JobSelectorType.ENABLED_WITH_BOTHHOOKS
+      ) {
+        bytes memory _returnData;
+        // Execute the pre hook and then the job if the pre hook is successful with the returned data
+        _returnData = IHook(_hookData.preHook).preHook(_relayCaller, msg.sender, _dataToExecute.jobData);
+
+        (_success,) = _dataToExecute.job.call(_returnData);
+        if (!_success) revert AutomationVault_ExecFailed();
+      }
+
+      // EXECUTE MAIN JOB
+      (_success,) = _dataToExecute.job.call(_executeData);
       if (!_success) revert AutomationVault_ExecFailed();
+
+      // Execute prost-hook if enabled
+      if (
+        _hookData.selectorType == JobSelectorType.ENABLED_WITH_POSTHOOK
+          || _hookData.selectorType == JobSelectorType.ENABLED_WITH_BOTHHOOKS
+      ) {
+        // Execute the post hook
+        IHook(_hookData.postHook).postHook(_relayCaller, msg.sender, _dataToExecute.jobData);
+      }
 
       // Emit the event
       emit JobExecuted(msg.sender, _relayCaller, _dataToExecute.job, _dataToExecute.jobData);

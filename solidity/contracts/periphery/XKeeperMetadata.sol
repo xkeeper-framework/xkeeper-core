@@ -10,7 +10,6 @@ import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
  * @title  XKeeperMetadata
  * @notice This contract is used for managing the metadata of automation vaults
  */
-
 contract XKeeperMetadata is IXKeeperMetadata {
   using EnumerableSet for EnumerableSet.AddressSet;
 

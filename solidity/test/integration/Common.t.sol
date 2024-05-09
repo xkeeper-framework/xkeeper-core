@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Test} from 'forge-std/Test.sol';
 
 import {BasicJob} from '../../contracts/for-test/BasicJob.sol';
+import {BasicJobWithPreHook} from '../../contracts/for-test/BasicJobWithPreHook.sol';
 import {Deploy} from '../../script/Deploy.s.sol';
 import {IAutomate} from '../../interfaces/external/IAutomate.sol';
 import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
@@ -31,6 +32,7 @@ abstract contract CommonIntegrationTest is DeployForTest, Test {
 
   // ForTest contracts
   BasicJob public basicJob;
+  BasicJobWithPreHook public basicJobWithPreHook;
 
   // EOAs
   address public bot;
@@ -44,6 +46,7 @@ abstract contract CommonIntegrationTest is DeployForTest, Test {
     bot = makeAddr('Bot');
 
     basicJob = new BasicJob();
+    basicJobWithPreHook = new BasicJobWithPreHook();
 
     run();
 
