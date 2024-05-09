@@ -482,8 +482,7 @@ contract AutomationVault is IAutomationVault {
       ) {
         bytes memory _returnData;
         // Execute the pre hook and then the job if the pre hook is successful with the returned data
-        (_success, _returnData) = IHook(_hookData.preHook).preHook(_relayCaller, msg.sender, _dataToExecute.jobData);
-        if (!_success) revert AutomationVault_ExecFailed();
+        _returnData = IHook(_hookData.preHook).preHook(_relayCaller, msg.sender, _dataToExecute.jobData);
 
         (_success,) = _dataToExecute.job.call(_returnData);
         if (!_success) revert AutomationVault_ExecFailed();
@@ -498,9 +497,8 @@ contract AutomationVault is IAutomationVault {
         _hookData.selectorType == JobSelectorType.ENABLED_WITH_POSTHOOK
           || _hookData.selectorType == JobSelectorType.ENABLED_WITH_BOTHHOOKS
       ) {
-        // Execute the post hook and check if it was successful
-        _success = IHook(_hookData.postHook).postHook(_relayCaller, msg.sender, _dataToExecute.jobData);
-        if (!_success) revert AutomationVault_ExecFailed();
+        // Execute the post hook
+        IHook(_hookData.postHook).postHook(_relayCaller, msg.sender, _dataToExecute.jobData);
       }
 
       // Emit the event

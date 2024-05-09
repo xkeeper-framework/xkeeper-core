@@ -17,25 +17,19 @@ interface IHook {
    * @param  _relayCaller The caller of the relay
    * @param  _relay The relay address
    * @param  _dataToExecute The data to execute
-   * @return _success The success of the pre-hook
    * @return _returnedData The data returned by the pre-hook
    */
   function preHook(
     address _relayCaller,
     address _relay,
     bytes memory _dataToExecute
-  ) external returns (bool _success, bytes memory _returnedData);
+  ) external returns (bytes memory _returnedData);
 
   /**
    * @notice Executes the post-hook
    * @param  _relayCaller The caller of the relay
    * @param  _relay The relay address
    * @param  _dataToExecute The data to execute
-   * @return _successs The success of the post-hook
    */
-  function postHook(
-    address _relayCaller,
-    address _relay,
-    bytes memory _dataToExecute
-  ) external returns (bool _successs);
+  function postHook(address _relayCaller, address _relay, bytes memory _dataToExecute) external;
 }

@@ -8,7 +8,7 @@ import {IBasicJob} from '../../interfaces/for-test/IBasicJob.sol';
  * @notice This contract is a basic job that can be automated by any automation vault
  * @dev This contract is for testing purposes only
  */
-contract BasicJob is IBasicJobWithPreHook, IBasicJob {
+contract BasicJobWithPreHook is IBasicJobWithPreHook, IBasicJob {
   /**
    * @notice Mapping of the dataset
    * @dev This mapping is for test a job that uses a lot of gas
@@ -25,9 +25,19 @@ contract BasicJob is IBasicJobWithPreHook, IBasicJob {
    */
   address internal _validCaller;
 
+  /**
+   * @notice Valid relay
+   */
+  address internal _validRelay;
+
   /// @inheritdoc IBasicJobWithPreHook
   function setCaller(address _caller) external {
     _validCaller = _caller;
+  }
+
+  /// @inheritdoc IBasicJobWithPreHook
+  function setRelay(address _relay) external {
+    _validRelay = _relay;
   }
 
   /// @inheritdoc IBasicJob
@@ -52,9 +62,9 @@ contract BasicJob is IBasicJobWithPreHook, IBasicJob {
     address _relayCaller,
     address _relay,
     bytes memory _dataToExecute
-  ) external view returns (bool _success, bytes memory _returnedData) {
-    if (_relayCaller != _validCaller) revert BasicJobWithPreHookChecker_InvalidCaller();
-    _success = true;
+  ) external view returns (bytes memory _returnedData) {
+    if (_relayCaller != _validCaller) revert BasicJobWithPreHook_InvalidCaller();
+    if (_relay != _validRelay) revert BasicJobWithPreHook_InvalidRelay();
     _returnedData = _dataToExecute;
   }
 }
