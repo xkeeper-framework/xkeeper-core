@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.19;
 
+import {IERC20} from 'openzeppelin/token/ERC20/utils/SafeERC20.sol';
+
 import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
 
 interface IOpenRelay {
@@ -8,6 +10,7 @@ interface IOpenRelay {
                               EVENTS  
   //////////////////////////////////////////////////////////////*/
 
+  event ExtraPaymentSetted(IAutomationVault indexed _automationVault, address indexed _job, PaymentData _paymentData);
   /**
    * @notice Emitted when an automation vault is executed
    * @param  _automationVault The address of the automation vault
@@ -26,10 +29,20 @@ interface IOpenRelay {
                               ERRORS  
   //////////////////////////////////////////////////////////////*/
 
+  error OpenRelay_NotVaultOwner();
   /**
    * @notice Thrown when the exec data is empty
    */
   error OpenRelay_NoExecData();
+
+  /*///////////////////////////////////////////////////////////////
+                              STRUCTS
+  //////////////////////////////////////////////////////////////*/
+
+  struct PaymentData {
+    IERC20 token;
+    uint256 amountOrPercentage;
+  }
 
   /*///////////////////////////////////////////////////////////////
                           VIEW FUNCTIONS  
