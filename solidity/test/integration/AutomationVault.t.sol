@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {CommonIntegrationTest} from '../integration/Common.t.sol';
 import {IERC20, SafeERC20} from 'openzeppelin/token/ERC20/utils/SafeERC20.sol';
 
-import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
+import {IAutomationVault, IOwnable} from '../../interfaces/core/IAutomationVault.sol';
 import {_DAI_WHALE, _DAI} from './Constants.sol';
 
 contract IntegrationAutomationVault is CommonIntegrationTest {
@@ -36,7 +36,7 @@ contract IntegrationAutomationVault is CommonIntegrationTest {
 
     vm.startPrank(newOwner);
     // Try to withdraw funds, should fail because new owner has not confirmed
-    vm.expectRevert(abi.encodeWithSelector(IAutomationVault.AutomationVault_OnlyOwner.selector));
+    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyOwner.selector));
     automationVault.withdrawFunds(address(_DAI), _amount, newOwner);
 
     // Balance of DAI should be 0
@@ -52,7 +52,7 @@ contract IntegrationAutomationVault is CommonIntegrationTest {
 
     // Check that the old owner can't withdraw funds
     changePrank(owner);
-    vm.expectRevert(abi.encodeWithSelector(IAutomationVault.AutomationVault_OnlyOwner.selector));
+    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyOwner.selector));
     automationVault.withdrawFunds(address(_DAI), _balance - _amountToWithdraw, owner);
   }
 }

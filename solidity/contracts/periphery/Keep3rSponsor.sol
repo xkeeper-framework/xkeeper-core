@@ -5,13 +5,14 @@ import {EnumerableSet} from 'openzeppelin/utils/structs/EnumerableSet.sol';
 
 import {IKeep3rSponsor, IKeep3rV2, IKeep3rHelper} from '../../interfaces/periphery/IKeep3rSponsor.sol';
 import {IAutomationVault, IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
+import {Ownable} from '../utils/Ownable.sol';
 
 /**
  * @title  Keep3rSponsor
  * @notice This contract managed by Keep3r Network will sponsor some execution in determined jobs
  */
 
-contract Keep3rSponsor is IKeep3rSponsor {
+contract Keep3rSponsor is IKeep3rSponsor, Ownable {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IKeep3rSponsor
@@ -28,12 +29,6 @@ contract Keep3rSponsor is IKeep3rSponsor {
 
   /// @inheritdoc IKeep3rSponsor
   IOpenRelay public openRelay;
-
-  /// @inheritdoc IKeep3rSponsor
-  address public owner;
-
-  /// @inheritdoc IKeep3rSponsor
-  address public pendingOwner;
 
   /// @inheritdoc IKeep3rSponsor
   address public feeRecipient;
@@ -56,8 +51,7 @@ contract Keep3rSponsor is IKeep3rSponsor {
     IOpenRelay _openRelay,
     IKeep3rV2 _keep3rV2,
     IKeep3rHelper _keep3rHelper
-  ) {
-    owner = _owner;
+  ) Ownable(_owner) {
     feeRecipient = _feeRecipient;
     openRelay = _openRelay;
     KEEP3R_V2 = _keep3rV2;
@@ -67,19 +61,6 @@ contract Keep3rSponsor is IKeep3rSponsor {
   /// @inheritdoc IKeep3rSponsor
   function getSponsoredJobs() external view returns (address[] memory _sponsoredJobsList) {
     _sponsoredJobsList = _sponsoredJobs.values();
-  }
-
-  /// @inheritdoc IKeep3rSponsor
-  function changeOwner(address _pendingOwner) external onlyOwner {
-    pendingOwner = _pendingOwner;
-    emit ChangeOwner(_pendingOwner);
-  }
-
-  /// @inheritdoc IKeep3rSponsor
-  function acceptOwner() external onlyPendingOwner {
-    pendingOwner = address(0);
-    owner = msg.sender;
-    emit AcceptOwner(msg.sender);
   }
 
   /// @inheritdoc IKeep3rSponsor
@@ -147,23 +128,5 @@ contract Keep3rSponsor is IKeep3rSponsor {
     uint256 _reward = IKeep3rHelper(KEEP3R_HELPER).getRewardAmountFor(msg.sender, _initialGas - _gasAfterWork);
     _reward = (_reward * bonus) / BASE;
     KEEP3R_V2.bondedPayment(msg.sender, _reward);
-  }
-
-  /**
-   * @notice Checks that the caller is the owner
-   */
-  modifier onlyOwner() {
-    address _owner = owner;
-    if (msg.sender != _owner) revert Keep3rSponsor_OnlyOwner();
-    _;
-  }
-
-  /**
-   * @notice Checks that the caller is the pending owner
-   */
-  modifier onlyPendingOwner() {
-    address _pendingOwner = pendingOwner;
-    if (msg.sender != _pendingOwner) revert Keep3rSponsor_OnlyPendingOwner();
-    _;
   }
 }

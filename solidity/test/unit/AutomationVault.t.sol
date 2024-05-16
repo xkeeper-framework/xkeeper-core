@@ -5,6 +5,7 @@ import {Test} from 'forge-std/Test.sol';
 import {IERC20} from 'openzeppelin/token/ERC20/IERC20.sol';
 
 import {AutomationVault, IAutomationVault, EnumerableSet} from '../../contracts/core/AutomationVault.sol';
+import {IOwnable} from '../../contracts/utils/Ownable.sol';
 import {_NATIVE_TOKEN, _ALL} from '../../utils/Constants.sol';
 
 contract AutomationVaultForTest is AutomationVault {
@@ -12,10 +13,6 @@ contract AutomationVaultForTest is AutomationVault {
   using EnumerableSet for EnumerableSet.Bytes32Set;
 
   constructor(address _owner, address _nativeToken) AutomationVault(_owner, _nativeToken) {}
-
-  function setPendingOwnerForTest(address _pendingOwner) public {
-    pendingOwner = _pendingOwner;
-  }
 
   function addRelayCallerForTest(address _relay, address _caller) public {
     _approvedCallers[_relay].add(_caller);
@@ -96,7 +93,7 @@ abstract contract AutomationVaultUnitTest is Test {
    * @notice Helper function to change the prank and expect revert if the caller is not the owner
    */
   function _revertOnlyOwner() internal {
-    vm.expectRevert(abi.encodeWithSelector(IAutomationVault.AutomationVault_OnlyOwner.selector));
+    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyOwner.selector));
     changePrank(pendingOwner);
   }
 
@@ -218,89 +215,6 @@ contract UnitAutomationVaultListRelays is AutomationVaultUnitTest {
 
     assertEq(automationVault.relays().length, 1);
     assertEq(automationVault.relays()[0], _relay);
-  }
-}
-
-contract UnitAutomationVaultChangeOwner is AutomationVaultUnitTest {
-  function setUp() public override {
-    AutomationVaultUnitTest.setUp();
-
-    vm.startPrank(owner);
-  }
-
-  /**
-   * @notice Checks that the test has to revert if the caller is not the owner
-   */
-  function testRevertIfCallerIsNotOwner() public {
-    _revertOnlyOwner();
-    automationVault.changeOwner(pendingOwner);
-  }
-
-  /**
-   * @notice Check that the pending owner is set correctly
-   */
-  function testSetPendingOwner() public {
-    automationVault.changeOwner(pendingOwner);
-
-    assertEq(automationVault.pendingOwner(), pendingOwner);
-  }
-
-  /**
-   * @notice  Emit ChangeOwner event when the pending owner is set
-   */
-  function testEmitChangeOwner() public {
-    vm.expectEmit();
-    emit ChangeOwner(pendingOwner);
-
-    automationVault.changeOwner(pendingOwner);
-  }
-}
-
-contract UnitAutomationVaultAcceptOwner is AutomationVaultUnitTest {
-  function setUp() public override {
-    AutomationVaultUnitTest.setUp();
-
-    automationVault.setPendingOwnerForTest(pendingOwner);
-
-    vm.startPrank(pendingOwner);
-  }
-
-  /**
-   * @notice Check that the test has to revert if the caller is not the pending owner
-   */
-  function testRevertIfCallerIsNotPendingOwner() public {
-    vm.expectRevert(abi.encodeWithSelector(IAutomationVault.AutomationVault_OnlyPendingOwner.selector));
-
-    changePrank(owner);
-    automationVault.acceptOwner();
-  }
-
-  /**
-   * @notice Check that the pending owner accepts the ownership
-   */
-  function testSetJobOwner() public {
-    automationVault.acceptOwner();
-
-    assertEq(automationVault.owner(), pendingOwner);
-  }
-
-  /**
-   * @notice Check that the pending owner is set to zero
-   */
-  function testDeletePendingOwner() public {
-    automationVault.acceptOwner();
-
-    assertEq(automationVault.pendingOwner(), address(0));
-  }
-
-  /**
-   * @notice Emit AcceptOwner event when the pending owner accepts the ownership
-   */
-  function testEmitAcceptOwner() public {
-    vm.expectEmit();
-    emit AcceptOwner(pendingOwner);
-
-    automationVault.acceptOwner();
   }
 }
 

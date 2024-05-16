@@ -4,6 +4,8 @@ pragma solidity 0.8.19;
 import {Test} from 'forge-std/Test.sol';
 
 import {IXKeeperMetadata, XKeeperMetadata, IAutomationVault} from '../../contracts/periphery/XKeeperMetadata.sol';
+import {IOwnable} from '../../interfaces/utils/IOwnable.sol';
+import {IOwnableAutomationVault} from '../../interfaces/utils/IOwnableAutomationVault.sol';
 
 contract XKeeperMetadataForTest is XKeeperMetadata {
   function addMetadataForTest(
@@ -68,7 +70,7 @@ contract UnitXKeeperMetadataSetAutomationVaultMetadata is XKeeperMetadataUnitTes
   IXKeeperMetadata.AutomationVaultMetadata internal _automationVaultMetadata;
 
   modifier happyPath(string memory _name, string memory _description) {
-    vm.mockCall(address(automationVault), abi.encodeWithSelector(IAutomationVault.owner.selector), abi.encode(owner));
+    vm.mockCall(address(automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(owner));
     _automationVaultMetadata = IXKeeperMetadata.AutomationVaultMetadata(_name, _description);
     vm.startPrank(owner);
     _;
@@ -81,7 +83,7 @@ contract UnitXKeeperMetadataSetAutomationVaultMetadata is XKeeperMetadataUnitTes
   ) public happyPath(_name, _description) {
     vm.assume(_newOwner != owner);
 
-    vm.expectRevert(IXKeeperMetadata.XKeeperMetadata_OnlyAutomationVaultOwner.selector);
+    vm.expectRevert(IOwnableAutomationVault.OwnableAutomationVault_OnlyAutomationVaultOwner.selector);
 
     changePrank(_newOwner);
     xKeeperMetadata.setAutomationVaultMetadata(automationVault, _automationVaultMetadata);
