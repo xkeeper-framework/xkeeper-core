@@ -59,7 +59,7 @@ contract UnitAutomationVaultFactoryGetTotalAutomationVaults is AutomationVaultFa
   EnumerableSet.AddressSet internal _cleanAutomationVaults;
 
   modifier happyPath(address[] memory _automationVaults) {
-    vm.assume(_automationVaults.length > 0 && _automationVaults.length < 30);
+    vm.assume(_automationVaults.length > 0 && _automationVaults.length < 50);
 
     automationVaultFactory.addAutomationVaultForTest(_automationVaults);
     _;
@@ -88,7 +88,7 @@ contract UnitAutomationVaultFactoryGetAutomationVaults is AutomationVaultFactory
     uint256 _startFrom,
     uint256 _automationVaultAmount
   ) public happyPath(_automationVaults, _startFrom, _automationVaultAmount) {
-    vm.assume(_automationVaultAmount < 30);
+    vm.assume(_automationVaultAmount < 50);
     address[] memory __automationVaults = automationVaultFactory.automationVaults(_startFrom, _automationVaultAmount);
 
     assertEq(__automationVaults.length, _automationVaultAmount);
