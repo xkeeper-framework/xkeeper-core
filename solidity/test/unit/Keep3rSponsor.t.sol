@@ -88,6 +88,68 @@ contract Keep3rSponsorUnitTest is Test {
   }
 }
 
+contract UnitKeep3rSponsorChangeOwner is Keep3rSponsorUnitTest {
+  function setUp() public override {
+    Keep3rSponsorUnitTest.setUp();
+
+    vm.startPrank(owner);
+  }
+
+  function testRevertIfCallerIsNotOwner() public {
+    _revertOnlyOwner();
+    keep3rSponsor.changeOwner(pendingOwner);
+  }
+
+  function testSetPendingOwner() public {
+    keep3rSponsor.changeOwner(pendingOwner);
+
+    assertEq(keep3rSponsor.pendingOwner(), pendingOwner);
+  }
+
+  function testEmitChangeOwner() public {
+    vm.expectEmit();
+    emit ChangeOwner(pendingOwner);
+
+    keep3rSponsor.changeOwner(pendingOwner);
+  }
+}
+
+contract UnitKeep3rSponsorAcceptOwner is Keep3rSponsorUnitTest {
+  function setUp() public override {
+    Keep3rSponsorUnitTest.setUp();
+
+    keep3rSponsor.setPendingOwnerForTest(pendingOwner);
+
+    vm.startPrank(pendingOwner);
+  }
+
+  function testRevertIfCallerIsNotPendingOwner() public {
+    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyPendingOwner.selector));
+
+    changePrank(owner);
+    keep3rSponsor.acceptOwner();
+  }
+
+  function testSetJobOwner() public {
+    keep3rSponsor.acceptOwner();
+
+    assertEq(keep3rSponsor.owner(), pendingOwner);
+  }
+
+  function testDeletePendingOwner() public {
+    keep3rSponsor.acceptOwner();
+
+    assertEq(keep3rSponsor.pendingOwner(), address(0));
+  }
+
+  function testEmitAcceptOwner() public {
+    vm.expectEmit();
+    emit AcceptOwner(pendingOwner);
+
+    keep3rSponsor.acceptOwner();
+  }
+}
+
 contract UnitKeep3rSponsorConstructor is Keep3rSponsorUnitTest {
   function testParamsAreSet() public {
     assertEq(keep3rSponsor.owner(), owner);
