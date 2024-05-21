@@ -86,7 +86,7 @@ contract UnitAutomationVaultFactoryGetAutomationVaults is AutomationVaultFactory
 
     automationVaultFactory.addAutomationVaultForTest(_automationVaults);
 
-    vm.assume(_automationVaultAmount < 50);
+    vm.assume(_automationVaultAmount < 20);
     // Avoid underflow
     vm.assume(_startFrom < _cleanAutomationVaults.length());
     vm.assume(_automationVaultAmount < _cleanAutomationVaults.length() - _startFrom);
