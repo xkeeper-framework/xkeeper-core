@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {CommonIntegrationTest} from '../integration/Common.t.sol';
+import {CommonIntegrationTest} from './Common.t.sol';
 
-import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
-import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
-import {IKeep3rHelper} from '../../interfaces/external/IKeep3rHelper.sol';
-import {IKeep3rV1} from '../../interfaces/external/IKeep3rV1.sol';
-import {_KEEP3R_V2, _KEEP3R_HELPER, _KEEP3R_V1, _KEEP3R_GOVERNOR, _KP3R_WHALE} from './Constants.sol';
+import {IAutomationVault} from '../../../interfaces/core/IAutomationVault.sol';
+import {IKeep3rV2} from '../../../interfaces/external/IKeep3rV2.sol';
+import {IKeep3rHelper} from '../../../interfaces/external/IKeep3rHelper.sol';
+import {IKeep3rV1} from '../../../interfaces/external/IKeep3rV1.sol';
+import {_KEEP3R_V2, _KEEP3R_HELPER, _KEEP3R_V1, _KEEP3R_GOVERNOR, _KP3R_WHALE} from '../Constants.sol';
 
 contract IntegrationKeep3rSponsor is CommonIntegrationTest {
   // Events
