@@ -5,6 +5,7 @@ import {Test} from 'forge-std/Test.sol';
 
 import {Keep3rRelayL2, IKeep3rRelay, IAutomationVault} from '../../contracts/relays/Keep3rRelayL2.sol';
 import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
+import {IKeep3rJobWorkableRated} from '../../interfaces/external/IKeep3rJobWorkableRated.sol';
 
 import {IOwnableAutomationVault} from '../../interfaces/utils/IOwnableAutomationVault.sol';
 import {IOwnable} from '../../interfaces/utils/IOwnable.sol';
@@ -33,16 +34,23 @@ contract Keep3rRelayL2UnitTest is Test {
   // Keep3r V2 contract
   IKeep3rV2 public keep3rV2;
 
+  // Owner
+  address public owner;
+
   function setUp() public virtual {
     keep3rV2 = IKeep3rV2(makeAddr('KEEP3R_V2'));
     keep3rRelayL2 = new Keep3rRelayL2ForTest(keep3rV2);
+
+    owner = makeAddr('Owner');
   }
 }
 
 contract UnitKeep3rRelayL2SetUsdPerUnit is Keep3rRelayL2UnitTest {
   modifier happyPath(IAutomationVault _automationVault, uint256 _usdPerGasUnit) {
-    assumeNoPrecompiles(address(_automationVault));
     vm.assume(_usdPerGasUnit > 0);
+    vm.startPrank(owner);
+
+    vm.mockCall(address(_automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(owner));
     _;
   }
 
@@ -51,23 +59,21 @@ contract UnitKeep3rRelayL2SetUsdPerUnit is Keep3rRelayL2UnitTest {
     uint256 _usdPerGasUnit,
     address _notOwner
   ) public happyPath(_automationVault, _usdPerGasUnit) {
-    vm.assume(address(this) != _notOwner);
-    vm.mockCall(address(_automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(_notOwner));
+    vm.assume(owner != _notOwner);
+
     vm.expectRevert(IOwnableAutomationVault.OwnableAutomationVault_OnlyAutomationVaultOwner.selector);
 
+    changePrank(_notOwner);
     keep3rRelayL2.setUsdPerGasUnit(_automationVault, _usdPerGasUnit);
   }
 
   function testEmitUsdPerGasUnitSetted(
     IAutomationVault _automationVault,
-    uint256 _usdPerGasUnit,
-    address _owner
+    uint256 _usdPerGasUnit
   ) public happyPath(_automationVault, _usdPerGasUnit) {
-    vm.mockCall(address(_automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(_owner));
     vm.expectEmit();
     emit UsdPerGasUnitSetted(_automationVault, _usdPerGasUnit);
 
-    vm.prank(_owner);
     keep3rRelayL2.setUsdPerGasUnit(_automationVault, _usdPerGasUnit);
   }
 }
@@ -203,7 +209,7 @@ contract UnitKeep3rRelayL2Exec is Keep3rRelayL2UnitTest {
     _execDataKeep3r[_execData.length + 1] = IAutomationVault.ExecData({
       job: address(keep3rV2),
       jobData: abi.encodeWithSelector(
-        IKeep3rV2.worked.selector, _relayCaller, keep3rRelayL2.usdPerGasUnitPerVault(_automationVault)
+        IKeep3rJobWorkableRated.worked.selector, _relayCaller, keep3rRelayL2.usdPerGasUnitPerVault(_automationVault)
         )
     });
   }
