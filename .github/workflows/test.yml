@@ -34,6 +34,7 @@ jobs:
         run: |
           touch .env
           echo ETHEREUM_MAINNET_RPC="${{ secrets.MAINNET_RPC }}" >> .env
+          echo OPTIMISM_MAINNET_RPC="${{ secrets.OPTIMISM_RPC }}" >> .env
           cat .env
 
       - name: Run tests
