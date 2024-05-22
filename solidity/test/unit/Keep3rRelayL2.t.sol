@@ -61,7 +61,9 @@ contract UnitKeep3rRelayL2SetUsdPerUnit is Keep3rRelayL2UnitTest {
   ) public happyPath(_automationVault, _usdPerGasUnit) {
     vm.assume(owner != _notOwner);
 
-    vm.expectRevert(IOwnableAutomationVault.OwnableAutomationVault_OnlyAutomationVaultOwner.selector);
+    vm.expectRevert(
+      abi.encodeWithSelector(IOwnableAutomationVault.OwnableAutomationVault_OnlyAutomationVaultOwner.selector)
+    );
 
     changePrank(_notOwner);
     keep3rRelayL2.setUsdPerGasUnit(_automationVault, _usdPerGasUnit);
