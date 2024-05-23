@@ -5,23 +5,21 @@ import {EnumerableSet} from 'openzeppelin/utils/structs/EnumerableSet.sol';
 import {IERC20, SafeERC20} from 'openzeppelin/token/ERC20/utils/SafeERC20.sol';
 
 import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
+import {Ownable} from '../utils/Ownable.sol';
 import {_ALL} from '../../utils/Constants.sol';
 
 /**
  * @title  AutomationVault
  * @notice This contract is used for managing the execution of jobs using several relays and paying them for their work
  */
-contract AutomationVault is IAutomationVault {
+contract AutomationVault is IAutomationVault, Ownable {
   using SafeERC20 for IERC20;
   using EnumerableSet for EnumerableSet.AddressSet;
   using EnumerableSet for EnumerableSet.Bytes32Set;
 
   /// @inheritdoc IAutomationVault
   address public immutable NATIVE_TOKEN;
-  /// @inheritdoc IAutomationVault
-  address public owner;
-  /// @inheritdoc IAutomationVault
-  address public pendingOwner;
+
   /**
    * @notice Callers approved to call a relay
    */
@@ -42,11 +40,7 @@ contract AutomationVault is IAutomationVault {
    */
   EnumerableSet.AddressSet internal _relays;
 
-  /**
-   * @param _owner The address of the owner
-   */
-  constructor(address _owner, address _nativeToken) {
-    owner = _owner;
+  constructor(address _owner, address _nativeToken) Ownable(_owner) {
     NATIVE_TOKEN = _nativeToken;
   }
 
@@ -106,19 +100,6 @@ contract AutomationVault is IAutomationVault {
   /// @inheritdoc IAutomationVault
   function relays() external view returns (address[] memory _relayList) {
     _relayList = _relays.values();
-  }
-
-  /// @inheritdoc IAutomationVault
-  function changeOwner(address _pendingOwner) external onlyOwner {
-    pendingOwner = _pendingOwner;
-    emit ChangeOwner(_pendingOwner);
-  }
-
-  /// @inheritdoc IAutomationVault
-  function acceptOwner() external onlyPendingOwner {
-    pendingOwner = address(0);
-    owner = msg.sender;
-    emit AcceptOwner(msg.sender);
   }
 
   /// @inheritdoc IAutomationVault
@@ -449,24 +430,6 @@ contract AutomationVault is IAutomationVault {
         ++_i;
       }
     }
-  }
-
-  /**
-   * @notice Checks that the caller is the owner
-   */
-  modifier onlyOwner() {
-    address _owner = owner;
-    if (msg.sender != _owner) revert AutomationVault_OnlyOwner();
-    _;
-  }
-
-  /**
-   * @notice Checks that the caller is the pending owner
-   */
-  modifier onlyPendingOwner() {
-    address _pendingOwner = pendingOwner;
-    if (msg.sender != _pendingOwner) revert AutomationVault_OnlyPendingOwner();
-    _;
   }
 
   /**

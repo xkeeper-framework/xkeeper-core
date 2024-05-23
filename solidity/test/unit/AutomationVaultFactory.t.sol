@@ -74,12 +74,22 @@ contract UnitAutomationVaultFactoryGetTotalAutomationVaults is AutomationVaultFa
 }
 
 contract UnitAutomationVaultFactoryGetAutomationVaults is AutomationVaultFactoryUnitTest {
-  modifier happyPath(address[] memory _automationVaults, uint256 _startFrom, uint256 _amount) {
-    // Avoid underflow
-    vm.assume(_startFrom < _automationVaults.length);
-    vm.assume(_amount < _automationVaults.length - _startFrom);
+  using EnumerableSet for EnumerableSet.AddressSet;
+
+  // This is needed because foundry fuzz some values which are repeated
+  EnumerableSet.AddressSet internal _cleanAutomationVaults;
+
+  modifier happyPath(address[] memory _automationVaults, uint256 _startFrom, uint256 _automationVaultAmount) {
+    for (uint256 _index; _index < _automationVaults.length; _index++) {
+      _cleanAutomationVaults.add(_automationVaults[_index]);
+    }
 
     automationVaultFactory.addAutomationVaultForTest(_automationVaults);
+
+    vm.assume(_automationVaultAmount < 100);
+    // Avoid underflow
+    vm.assume(_startFrom < _cleanAutomationVaults.length());
+    vm.assume(_automationVaultAmount < _cleanAutomationVaults.length() - _startFrom);
     _;
   }
 
@@ -88,7 +98,6 @@ contract UnitAutomationVaultFactoryGetAutomationVaults is AutomationVaultFactory
     uint256 _startFrom,
     uint256 _automationVaultAmount
   ) public happyPath(_automationVaults, _startFrom, _automationVaultAmount) {
-    vm.assume(_automationVaultAmount < 30);
     address[] memory __automationVaults = automationVaultFactory.automationVaults(_startFrom, _automationVaultAmount);
 
     assertEq(__automationVaults.length, _automationVaultAmount);
