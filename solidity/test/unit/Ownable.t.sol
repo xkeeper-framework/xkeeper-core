@@ -31,14 +31,6 @@ abstract contract OwnableUnitTest is Test {
 
     ownable = new OwnableForTest(owner);
   }
-
-  /**
-   * @notice Helper function to change the prank and expect revert if the caller is not the owner
-   */
-  function _revertOnlyOwner() internal {
-    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyOwner.selector));
-    changePrank(pendingOwner);
-  }
 }
 
 contract UnitOwnableChangeOwner is OwnableUnitTest {
@@ -52,7 +44,8 @@ contract UnitOwnableChangeOwner is OwnableUnitTest {
    * @notice Checks that the test has to revert if the caller is not the owner
    */
   function testRevertIfCallerIsNotOwner() public {
-    _revertOnlyOwner();
+    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyOwner.selector));
+    changePrank(pendingOwner);
     ownable.changeOwner(pendingOwner);
   }
 

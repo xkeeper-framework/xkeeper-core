@@ -59,8 +59,6 @@ contract NoFallbackForTest {}
  */
 abstract contract AutomationVaultUnitTest is Test {
   /// Events
-  event ChangeOwner(address indexed _pendingOwner);
-  event AcceptOwner(address indexed _owner);
   event WithdrawFunds(address indexed _token, uint256 _amount, address indexed _receiver);
   event ApproveRelay(address indexed _relay);
   event DeleteRelay(address indexed _relay);
@@ -219,89 +217,6 @@ contract UnitAutomationVaultListRelays is AutomationVaultUnitTest {
 
     assertEq(automationVault.relays().length, 1);
     assertEq(automationVault.relays()[0], _relay);
-  }
-}
-
-contract UnitAutomationVaultChangeOwner is AutomationVaultUnitTest {
-  function setUp() public override {
-    AutomationVaultUnitTest.setUp();
-
-    vm.startPrank(owner);
-  }
-
-  /**
-   * @notice Checks that the test has to revert if the caller is not the owner
-   */
-  function testRevertIfCallerIsNotOwner() public {
-    _revertOnlyOwner();
-    automationVault.changeOwner(pendingOwner);
-  }
-
-  /**
-   * @notice Check that the pending owner is set correctly
-   */
-  function testSetPendingOwner() public {
-    automationVault.changeOwner(pendingOwner);
-
-    assertEq(automationVault.pendingOwner(), pendingOwner);
-  }
-
-  /**
-   * @notice  Emit ChangeOwner event when the pending owner is set
-   */
-  function testEmitChangeOwner() public {
-    vm.expectEmit();
-    emit ChangeOwner(pendingOwner);
-
-    automationVault.changeOwner(pendingOwner);
-  }
-}
-
-contract UnitAutomationVaultAcceptOwner is AutomationVaultUnitTest {
-  function setUp() public override {
-    AutomationVaultUnitTest.setUp();
-
-    automationVault.setPendingOwnerForTest(pendingOwner);
-
-    vm.startPrank(pendingOwner);
-  }
-
-  /**
-   * @notice Check that the test has to revert if the caller is not the pending owner
-   */
-  function testRevertIfCallerIsNotPendingOwner() public {
-    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyPendingOwner.selector));
-
-    changePrank(owner);
-    automationVault.acceptOwner();
-  }
-
-  /**
-   * @notice Check that the pending owner accepts the ownership
-   */
-  function testSetJobOwner() public {
-    automationVault.acceptOwner();
-
-    assertEq(automationVault.owner(), pendingOwner);
-  }
-
-  /**
-   * @notice Check that the pending owner is set to zero
-   */
-  function testDeletePendingOwner() public {
-    automationVault.acceptOwner();
-
-    assertEq(automationVault.pendingOwner(), address(0));
-  }
-
-  /**
-   * @notice Emit AcceptOwner event when the pending owner accepts the ownership
-   */
-  function testEmitAcceptOwner() public {
-    vm.expectEmit();
-    emit AcceptOwner(pendingOwner);
-
-    automationVault.acceptOwner();
   }
 }
 
