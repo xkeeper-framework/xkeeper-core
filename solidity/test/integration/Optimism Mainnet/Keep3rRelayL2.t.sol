@@ -6,6 +6,7 @@ import {CommonIntegrationTest} from './Common.t.sol';
 import {IKeep3rJobWorkableRated} from '../../../interfaces/external/IKeep3rJobWorkableRated.sol';
 
 import {IAutomationVault} from '../../../interfaces/core/IAutomationVault.sol';
+import {IKeep3rBondedRelay} from '../../../interfaces/relays/IKeep3rBondedRelayL2.sol';
 import {IKeep3rV2} from '../../../interfaces/external/IKeep3rV2.sol';
 import {IKeep3rHelper} from '../../../interfaces/external/IKeep3rHelper.sol';
 import {IKeep3rV1} from '../../../interfaces/external/IKeep3rV1.sol';
@@ -57,12 +58,21 @@ contract IntegrationKeep3rRelayL2 is CommonIntegrationTest {
     _jobsData[0] = IAutomationVault.JobData(address(keep3r), _keep3rSelectors);
     _jobsData[1] = IAutomationVault.JobData(address(basicJob), _jobSelectors);
 
+    // Bonded requirements
+    IKeep3rBondedRelay.Requirements memory _requirements = IKeep3rBondedRelay.Requirements(address(kp3r), 0, 0, 0);
+
     vm.startPrank(owner);
 
+    // Keep3r bonded relay L2 requirements setup
+    keep3rBondedRelayL2.setAutomationVaultRequirements(automationVault, _requirements);
+
+    // UsdPerGasUnit setup
     keep3rRelayL2.setUsdPerGasUnit(automationVault, 100_000);
+    keep3rBondedRelayL2.setUsdPerGasUnit(automationVault, 100_000);
 
     // AutomationVault approve relay data
     automationVault.addRelay(address(keep3rRelayL2), _keepers, _jobsData);
+    automationVault.addRelay(address(keep3rBondedRelayL2), _keepers, _jobsData);
   }
 
   function _addJobAndLiquidity(address _job, uint256 _amount) internal {
@@ -125,6 +135,51 @@ contract IntegrationKeep3rRelayL2 is CommonIntegrationTest {
 
     // Execure the job
     keep3rRelayL2.exec(automationVault, _execData);
+
+    // Check that the keeper has bonded KP3R
+    uint256 _paymentAfter = keep3r.bonds(bot, address(kp3r));
+
+    assertGt(_paymentAfter, _paymentBefore);
+  }
+
+  function test_executeJobBondedKeep3rL2() public {
+    // Bond and activate keep3r
+    _bondAndActivateKeeper(bot, 0);
+
+    IAutomationVault.ExecData[] memory _execData = new IAutomationVault.ExecData[](1);
+    _execData[0] = IAutomationVault.ExecData(address(basicJob), abi.encodeWithSelector(basicJob.work.selector));
+
+    emit KeeperValidation(0);
+    vm.expectEmit(address(basicJob));
+    emit Worked();
+    vm.expectEmit(true, true, true, false, address(keep3r));
+    emit KeeperWork(address(kp3r), address(automationVault), bot, 0, 0);
+
+    keep3rBondedRelayL2.exec(automationVault, _execData);
+  }
+
+  function test_executeAndGetPaymentFromKeep3rBondedL2(uint64 _fee, uint8 _howHard) public {
+    vm.assume(_howHard > 20);
+    vm.assume(_fee > 30 gwei && _fee < 200 gwei);
+    vm.fee(_fee);
+
+    // Bond and activate keep3r
+    _bondAndActivateKeeper(bot, 0);
+
+    // Check that the keeper has no bonded KP3R
+    uint256 _payment = keep3r.bonds(bot, address(kp3r));
+    assertEq(_payment, 0);
+
+    IAutomationVault.ExecData[] memory _execData = new IAutomationVault.ExecData[](1);
+    _execData[0] =
+      IAutomationVault.ExecData(address(basicJob), abi.encodeWithSelector(basicJob.workHard.selector, _howHard));
+
+    // Initializes storage variables
+    keep3rBondedRelayL2.exec(automationVault, _execData);
+    uint256 _paymentBefore = keep3r.bonds(bot, address(kp3r));
+
+    // Execure the job
+    keep3rBondedRelayL2.exec(automationVault, _execData);
 
     // Check that the keeper has bonded KP3R
     uint256 _paymentAfter = keep3r.bonds(bot, address(kp3r));

@@ -10,6 +10,7 @@ import {GelatoRelay, IGelatoRelay} from '../contracts/relays/GelatoRelay.sol';
 import {Keep3rRelay, IKeep3rRelay} from '../contracts/relays/Keep3rRelay.sol';
 import {Keep3rRelayL2, IKeep3rRelayL2} from '../contracts/relays/Keep3rRelayL2.sol';
 import {Keep3rBondedRelay, IKeep3rBondedRelay} from '../contracts/relays/Keep3rBondedRelay.sol';
+import {Keep3rBondedRelayL2, IKeep3rBondedRelayL2} from '../contracts/relays/Keep3rBondedRelayL2.sol';
 import {XKeeperMetadata, IXKeeperMetadata} from '../contracts/periphery/XKeeperMetadata.sol';
 import {_NATIVE_TOKEN} from '../utils/Constants.sol';
 import {IAutomate} from '../interfaces/external/IAutomate.sol';
@@ -33,6 +34,7 @@ abstract contract Deploy is Script {
   IKeep3rRelay public keep3rRelay;
   IKeep3rRelayL2 public keep3rRelayL2;
   IKeep3rBondedRelay public keep3rBondedRelay;
+  IKeep3rBondedRelayL2 public keep3rBondedRelayL2;
 
   // Periphery contracts
   IXKeeperMetadata public xKeeperMetadata;
@@ -71,6 +73,7 @@ abstract contract Deploy is Script {
         keep3rBondedRelay = new Keep3rBondedRelay{salt: _salt}(keep3rV2);
       } else {
         keep3rRelayL2 = new Keep3rRelayL2{salt: _salt}(keep3rV2);
+        keep3rBondedRelayL2 = new Keep3rBondedRelayL2{salt: _salt}(keep3rV2);
       }
     }
 
