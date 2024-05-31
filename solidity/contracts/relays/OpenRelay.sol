@@ -3,13 +3,14 @@ pragma solidity 0.8.19;
 
 import {IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
 import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
+import {OwnableAutomationVault} from '../utils/OwnableAutomationVault.sol';
 import {_NATIVE_TOKEN} from '../../utils/Constants.sol';
 
 /**
  * @title  OpenRelay
  * @notice This contract will manage all executions coming from any bot
  */
-contract OpenRelay is IOpenRelay {
+contract OpenRelay is IOpenRelay, OwnableAutomationVault {
   /// @inheritdoc IOpenRelay
   uint256 public constant GAS_BONUS = 53_000;
   /// @inheritdoc IOpenRelay
@@ -19,9 +20,11 @@ contract OpenRelay is IOpenRelay {
 
   mapping(IAutomationVault _automationVault => mapping(address _job => PaymentData _paymentData)) public paymentsData;
 
-  function setExtraPayment(IAutomationVault _automationVault, address _job, PaymentData memory _paymentData) external {
-    if (_automationVault.owner() != msg.sender) revert OpenRelay_NotVaultOwner();
-
+  function setExtraPayment(
+    IAutomationVault _automationVault,
+    address _job,
+    PaymentData memory _paymentData
+  ) external onlyAutomationVaultOwner(_automationVault) {
     paymentsData[_automationVault][_job] = _paymentData;
 
     emit ExtraPaymentSetted(_automationVault, _job, _paymentData);
