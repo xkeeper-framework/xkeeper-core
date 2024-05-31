@@ -74,8 +74,7 @@ contract IntegrationOpenRelay is CommonIntegrationTest {
     // Calculate payment
     uint256 _payment = _txCost * openRelay.GAS_MULTIPLIER() / openRelay.BASE();
 
-    assertGt(bot.balance, _payment);
-    assertLt(bot.balance, _payment * openRelay.GAS_MULTIPLIER() / openRelay.BASE());
+    assertApproxEqAbs(bot.balance, _payment, 0.001 ether);
   }
 
   function test_executeGetBonusPayment(uint16 _howHard, uint256 _amountOrPercentage) public {
