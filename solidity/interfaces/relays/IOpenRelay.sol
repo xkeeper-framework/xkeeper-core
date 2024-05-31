@@ -71,6 +71,14 @@ interface IOpenRelay {
   //////////////////////////////////////////////////////////////*/
 
   /**
+   * @notice Set the extra payment for a specific job in an automation vault
+   * @param  _automationVault The automation vault that will be executed
+   * @param  _job The address of the job
+   * @param  _paymentData The payment data
+   */
+  function setExtraPayment(IAutomationVault _automationVault, address _job, PaymentData calldata _paymentData) external;
+
+  /**
    * @notice Execute an automation vault which will execute the jobs and will manage the payment to the fee data receivers
    * @dev    The payment will be calculated on the basis of several variables like the gas spent, the base fee,
    *         the gas bonus and the gas multiplier
