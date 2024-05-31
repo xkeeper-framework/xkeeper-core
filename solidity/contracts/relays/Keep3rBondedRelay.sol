@@ -3,12 +3,13 @@ pragma solidity 0.8.19;
 
 import {IKeep3rBondedRelay, IAutomationVault, IKeep3rRelay} from '../../interfaces/relays/IKeep3rBondedRelay.sol';
 import {IKeep3rV2} from '../../interfaces/relays/IKeep3rRelay.sol';
+import {OwnableAutomationVault} from '../utils/OwnableAutomationVault.sol';
 
 /**
  * @title  Keep3rBondedRelay
  * @notice This contract will manage all executions coming from the keep3r network when the job is bonded
  */
-contract Keep3rBondedRelay is IKeep3rBondedRelay {
+contract Keep3rBondedRelay is IKeep3rBondedRelay, OwnableAutomationVault {
   /// @inheritdoc IKeep3rRelay
   IKeep3rV2 public immutable KEEP3R_V2;
 
@@ -27,9 +28,7 @@ contract Keep3rBondedRelay is IKeep3rBondedRelay {
   function setAutomationVaultRequirements(
     IAutomationVault _automationVault,
     IKeep3rBondedRelay.Requirements calldata _requirements
-  ) external {
-    if (_automationVault.owner() != msg.sender) revert Keep3rBondedRelay_NotVaultOwner();
-
+  ) external onlyAutomationVaultOwner(_automationVault) {
     automationVaultRequirements[_automationVault] = _requirements;
     emit AutomationVaultRequirementsSetted(
       _automationVault, _requirements.bond, _requirements.minBond, _requirements.earned, _requirements.age

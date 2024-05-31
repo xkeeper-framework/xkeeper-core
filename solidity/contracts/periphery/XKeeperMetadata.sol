@@ -5,13 +5,14 @@ import {EnumerableSet} from 'openzeppelin/utils/structs/EnumerableSet.sol';
 
 import {IXKeeperMetadata} from '../../interfaces/periphery/IXKeeperMetadata.sol';
 import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
+import {OwnableAutomationVault} from '../utils/OwnableAutomationVault.sol';
 
 /**
  * @title  XKeeperMetadata
  * @notice This contract is used for managing the metadata of automation vaults
  */
 
-contract XKeeperMetadata is IXKeeperMetadata {
+contract XKeeperMetadata is IXKeeperMetadata, OwnableAutomationVault {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IXKeeperMetadata
@@ -41,12 +42,7 @@ contract XKeeperMetadata is IXKeeperMetadata {
   function setAutomationVaultMetadata(
     IAutomationVault _automationVault,
     IXKeeperMetadata.AutomationVaultMetadata calldata _automationVaultMetadata
-  ) external {
-    // Check if the caller is the owner of the automation vault
-    if (_automationVault.owner() != msg.sender) {
-      revert XKeeperMetadata_OnlyAutomationVaultOwner();
-    }
-
+  ) external onlyAutomationVaultOwner(_automationVault) {
     // Index the metadata with the automation vault
     automationVaultMetadata[_automationVault] = _automationVaultMetadata;
 

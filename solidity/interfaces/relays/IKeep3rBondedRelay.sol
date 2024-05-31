@@ -26,11 +26,6 @@ interface IKeep3rBondedRelay is IKeep3rRelay {
   //////////////////////////////////////////////////////////////*/
 
   /**
-   * @notice Thrown when the caller is not the automation vault owner
-   */
-  error Keep3rBondedRelay_NotVaultOwner();
-
-  /**
    * @notice Thrown when the automation vault requirements are not setted
    */
   error Keep3rBondedRelay_NotAutomationVaultRequirement();
