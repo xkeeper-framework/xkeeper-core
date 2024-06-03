@@ -7,7 +7,6 @@ import {IKeep3rJobWorkableRated} from '../../interfaces/external/IKeep3rJobWorka
 
 import {
   Keep3rBondedRelayL2,
-  IKeep3rRelayL2,
   IKeep3rBondedRelay,
   IAutomationVault,
   IKeep3rV2,
@@ -306,7 +305,7 @@ contract UnitKeep3rBondedRelayL2Exec is Keep3rBondedRelayL2UnitTest {
       job: address(keep3rV2),
       jobData: abi.encodeWithSelector(
         IKeep3rJobWorkableRated.worked.selector, _relayCaller, keep3rBondedRelayL2.usdPerGasUnitPerVault(_automationVault)
-        )
+      )
     });
   }
 }

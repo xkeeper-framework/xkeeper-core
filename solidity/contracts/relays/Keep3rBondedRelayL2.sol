@@ -94,7 +94,7 @@ contract Keep3rBondedRelayL2 is IKeep3rBondedRelayL2, OwnableAutomationVault {
       job: address(KEEP3R_V2),
       jobData: abi.encodeWithSelector(
         IKeep3rJobWorkableRated.worked.selector, msg.sender, usdPerGasUnitPerVault[_automationVault]
-        )
+      )
     });
 
     // Send the array of calls to the automation vault for it to execute them
