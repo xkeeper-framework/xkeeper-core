@@ -17,15 +17,6 @@ interface IXKeeperMetadata {
   event AutomationVaultMetadataSetted(IAutomationVault indexed _automationVault, string _name, string _description);
 
   /*///////////////////////////////////////////////////////////////
-                          ERRORS
-  //////////////////////////////////////////////////////////////*/
-
-  /**
-   * @notice The caller is not the owner of the automation vault
-   */
-  error XKeeperMetadata_OnlyAutomationVaultOwner();
-
-  /*///////////////////////////////////////////////////////////////
                           STRUCTS
   //////////////////////////////////////////////////////////////*/
 

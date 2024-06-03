@@ -1,22 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.19;
 
-interface IAutomationVault {
+import {IOwnable} from '../utils/IOwnable.sol';
+
+interface IAutomationVault is IOwnable {
   /*///////////////////////////////////////////////////////////////
                               EVENTS
   //////////////////////////////////////////////////////////////*/
-
-  /**
-   * @notice Emitted when the owner is proposed to change
-   * @param  _pendingOwner The address that is being proposed
-   */
-  event ChangeOwner(address indexed _pendingOwner);
-
-  /**
-   * @notice Emitted when the owner is accepted
-   * @param  _owner The address of the new owner
-   */
-  event AcceptOwner(address indexed _owner);
 
   /**
    * @notice Emitted when funds are withdrawn
@@ -120,16 +110,6 @@ interface IAutomationVault {
    */
   error AutomationVault_ExecFailed();
 
-  /**
-   * @notice Thrown when the caller is not the owner
-   */
-  error AutomationVault_OnlyOwner();
-
-  /**
-   * @notice Thrown when the caller is not the pending owner
-   */
-  error AutomationVault_OnlyPendingOwner();
-
   /*///////////////////////////////////////////////////////////////
                               STRUCTS
   //////////////////////////////////////////////////////////////*/
@@ -171,23 +151,10 @@ interface IAutomationVault {
   //////////////////////////////////////////////////////////////*/
 
   /**
-   * @notice Returns the owner address
-   * @return _owner The address of the owner
-   */
-  function owner() external view returns (address _owner);
-
-  /**
    * @notice Returns the address of the native token
    * @return _nativeToken The address of the native token
    */
-
   function NATIVE_TOKEN() external view returns (address _nativeToken);
-
-  /**
-   * @notice Returns the pending owner address
-   * @return _pendingOwner The address of the pending owner
-   */
-  function pendingOwner() external view returns (address _pendingOwner);
 
   /**
    * @notice Returns the approved relay callers and selectors for a specific relay and job
@@ -208,18 +175,6 @@ interface IAutomationVault {
   /*///////////////////////////////////////////////////////////////
                         EXTERNAL FUNCTIONS
   //////////////////////////////////////////////////////////////*/
-
-  /**
-   * @notice Propose a new owner for the contract
-   * @dev    The new owner will need to accept the ownership before it is transferred
-   * @param  _pendingOwner The address of the new owner
-   */
-  function changeOwner(address _pendingOwner) external;
-
-  /**
-   * @notice Accepts the ownership of the contract
-   */
-  function acceptOwner() external;
 
   /**
    * @notice Withdraws funds deposited in the contract

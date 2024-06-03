@@ -2,10 +2,11 @@
 pragma solidity 0.8.19;
 
 import {IAutomationVault, IOpenRelay} from '../../interfaces/relays/IOpenRelay.sol';
+import {IOwnable} from '../../interfaces/utils/IOwnable.sol';
 import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
 import {IKeep3rHelper} from '../../interfaces/external/IKeep3rHelper.sol';
 
-interface IKeep3rSponsor {
+interface IKeep3rSponsor is IOwnable {
   /*///////////////////////////////////////////////////////////////
                               EVENTS
   //////////////////////////////////////////////////////////////*/
@@ -15,18 +16,6 @@ interface IKeep3rSponsor {
    * @param  _job The address of the job
    */
   event JobExecuted(address _job);
-
-  /**
-   * @notice Emitted when the owner is proposed to change
-   * @param  _pendingOwner The address that is being proposed
-   */
-  event ChangeOwner(address indexed _pendingOwner);
-
-  /**
-   * @notice Emitted when the owner is accepted
-   * @param  _owner The address of the new owner
-   */
-  event AcceptOwner(address indexed _owner);
 
   /**
    * @notice Emitted when the fee recipient is setted
@@ -66,16 +55,6 @@ interface IKeep3rSponsor {
    * @notice Thrown when the job executed is not in the list of sponsored jobs
    */
   error Keep3rSponsor_JobNotSponsored();
-
-  /**
-   * @notice Thrown when the caller is not the owner
-   */
-  error Keep3rSponsor_OnlyOwner();
-
-  /**
-   * @notice Thrown when the caller is not the pending owner
-   */
-  error Keep3rSponsor_OnlyPendingOwner();
 
   /**
    * @notice Thrown when the caller is not a keeper
@@ -128,18 +107,6 @@ interface IKeep3rSponsor {
   function openRelay() external view returns (IOpenRelay _openRelay);
 
   /**
-   * @notice Returns the owner address
-   * @return _owner The address of the owner
-   */
-  function owner() external view returns (address _owner);
-
-  /**
-   * @notice Returns the pending owner address
-   * @return _pendingOwner The address of the pending owner
-   */
-  function pendingOwner() external view returns (address _pendingOwner);
-
-  /**
    * @notice Returns the fee recipient address
    * @return _feeRecipient The address of the fee recipient
    */
@@ -154,18 +121,6 @@ interface IKeep3rSponsor {
   /*///////////////////////////////////////////////////////////////
                           EXTERNAL FUNCTIONS
   //////////////////////////////////////////////////////////////*/
-
-  /**
-   * @notice Propose a new owner for the contract
-   * @dev    The new owner will need to accept the ownership before it is transferred
-   * @param  _pendingOwner The address of the new owner
-   */
-  function changeOwner(address _pendingOwner) external;
-
-  /**
-   * @notice Accepts the ownership of the contract
-   */
-  function acceptOwner() external;
 
   /**
    * @notice Sets the fee recipient who will receive the payment of the open relay

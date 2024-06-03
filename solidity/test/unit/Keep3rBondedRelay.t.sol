@@ -10,6 +10,8 @@ import {
   IAutomationVault,
   IKeep3rV2
 } from '../../contracts/relays/Keep3rBondedRelay.sol';
+import {IOwnable} from '../../interfaces/utils/IOwnable.sol';
+import {IOwnableAutomationVault} from '../../interfaces/utils/IOwnableAutomationVault.sol';
 
 contract Keep3rBondedRelayForTest is Keep3rBondedRelay {
   constructor(IKeep3rV2 _keep3rV2) Keep3rBondedRelay(_keep3rV2) {}
@@ -61,7 +63,7 @@ contract UnitKeep3rRelaySetAutomationVaultRequirements is Keep3rBondedRelayUnitT
     vm.assume(
       _requirements.bond > address(0) && _requirements.minBond > 0 && _requirements.earned > 0 && _requirements.age > 0
     );
-    vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.owner.selector), abi.encode(_owner));
+    vm.mockCall(address(_automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(_owner));
     vm.startPrank(_owner);
     _;
   }
@@ -71,7 +73,7 @@ contract UnitKeep3rRelaySetAutomationVaultRequirements is Keep3rBondedRelayUnitT
     IAutomationVault _automationVault,
     IKeep3rBondedRelay.Requirements memory _requirements
   ) public happyPath(_relayCaller, _automationVault, _requirements) {
-    vm.expectRevert(IKeep3rBondedRelay.Keep3rBondedRelay_NotVaultOwner.selector);
+    vm.expectRevert(IOwnableAutomationVault.OwnableAutomationVault_OnlyAutomationVaultOwner.selector);
     changePrank(makeAddr('notOwner'));
 
     keep3rBondedRelay.setAutomationVaultRequirements(_automationVault, _requirements);

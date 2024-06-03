@@ -12,6 +12,7 @@ import {
   IKeep3rHelper,
   EnumerableSet
 } from '../../contracts/periphery/Keep3rSponsor.sol';
+import {IOwnable} from '../../contracts/utils/Ownable.sol';
 
 contract Keep3rSponsorForTest is Keep3rSponsor {
   using EnumerableSet for EnumerableSet.AddressSet;
@@ -45,8 +46,6 @@ contract Keep3rSponsorForTest is Keep3rSponsor {
 contract Keep3rSponsorUnitTest is Test {
   // Events
   event JobExecuted(address _job);
-  event ChangeOwner(address indexed _pendingOwner);
-  event AcceptOwner(address indexed _owner);
   event FeeRecipientSetted(address indexed _feeRecipient);
   event OpenRelaySetted(IOpenRelay indexed _openRelay);
   event ApproveSponsoredJob(address indexed _job);
@@ -82,7 +81,7 @@ contract Keep3rSponsorUnitTest is Test {
    * @notice Helper function to change the prank and expect revert if the caller is not the owner
    */
   function _revertOnlyOwner() internal {
-    vm.expectRevert(abi.encodeWithSelector(IKeep3rSponsor.Keep3rSponsor_OnlyOwner.selector));
+    vm.expectRevert(abi.encodeWithSelector(IOwnable.Ownable_OnlyOwner.selector));
     changePrank(pendingOwner);
   }
 }
@@ -122,68 +121,6 @@ contract UnitKeep3rSponsorGetSponsoredJob is Keep3rSponsorUnitTest {
     for (uint256 _i; _i < _cleanSponsoredJobs.length; ++_i) {
       assertEq(_cleanSponsoredJobs[_i], _getSponsoredJobs[_i]);
     }
-  }
-}
-
-contract UnitKeep3rSponsorChangeOwner is Keep3rSponsorUnitTest {
-  function setUp() public override {
-    Keep3rSponsorUnitTest.setUp();
-
-    vm.startPrank(owner);
-  }
-
-  function testRevertIfCallerIsNotOwner() public {
-    _revertOnlyOwner();
-    keep3rSponsor.changeOwner(pendingOwner);
-  }
-
-  function testSetPendingOwner() public {
-    keep3rSponsor.changeOwner(pendingOwner);
-
-    assertEq(keep3rSponsor.pendingOwner(), pendingOwner);
-  }
-
-  function testEmitChangeOwner() public {
-    vm.expectEmit();
-    emit ChangeOwner(pendingOwner);
-
-    keep3rSponsor.changeOwner(pendingOwner);
-  }
-}
-
-contract UnitKeep3rSponsorAcceptOwner is Keep3rSponsorUnitTest {
-  function setUp() public override {
-    Keep3rSponsorUnitTest.setUp();
-
-    keep3rSponsor.setPendingOwnerForTest(pendingOwner);
-
-    vm.startPrank(pendingOwner);
-  }
-
-  function testRevertIfCallerIsNotPendingOwner() public {
-    vm.expectRevert(abi.encodeWithSelector(IKeep3rSponsor.Keep3rSponsor_OnlyPendingOwner.selector));
-
-    changePrank(owner);
-    keep3rSponsor.acceptOwner();
-  }
-
-  function testSetJobOwner() public {
-    keep3rSponsor.acceptOwner();
-
-    assertEq(keep3rSponsor.owner(), pendingOwner);
-  }
-
-  function testDeletePendingOwner() public {
-    keep3rSponsor.acceptOwner();
-
-    assertEq(keep3rSponsor.pendingOwner(), address(0));
-  }
-
-  function testEmitAcceptOwner() public {
-    vm.expectEmit();
-    emit AcceptOwner(pendingOwner);
-
-    keep3rSponsor.acceptOwner();
   }
 }
 
