@@ -11,7 +11,6 @@ import {OwnableAutomationVault} from '../utils/OwnableAutomationVault.sol';
  * @title  XKeeperMetadata
  * @notice This contract is used for managing the metadata of automation vaults
  */
-
 contract XKeeperMetadata is IXKeeperMetadata, OwnableAutomationVault {
   using EnumerableSet for EnumerableSet.AddressSet;
 
