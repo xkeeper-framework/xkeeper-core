@@ -47,7 +47,7 @@ contract GelatoRelayUnitTest is Test {
 
 contract UnitGelatoRelayExec is GelatoRelayUnitTest {
   modifier happyPath(address _relayCaller, IAutomationVault _automationVault, uint256 _fee, address _feeToken) {
-    assumeNoPrecompiles(address(_automationVault));
+    assumeNotPrecompile(address(_automationVault));
     vm.assume(address(_automationVault) != address(vm));
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.exec.selector), abi.encode());
 

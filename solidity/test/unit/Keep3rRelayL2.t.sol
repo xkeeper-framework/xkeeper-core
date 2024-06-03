@@ -48,6 +48,8 @@ contract Keep3rRelayL2UnitTest is Test {
 contract UnitKeep3rRelayL2SetUsdPerUnit is Keep3rRelayL2UnitTest {
   modifier happyPath(IAutomationVault _automationVault, uint256 _usdPerGasUnit) {
     vm.assume(_usdPerGasUnit > 0);
+    assumeNotPrecompile(address(_automationVault));
+    assumeNotForgeAddress(address(_automationVault));
     vm.startPrank(owner);
 
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(owner));
@@ -87,8 +89,8 @@ contract UnitKeep3rRelayL2Exec is Keep3rRelayL2UnitTest {
     IAutomationVault.ExecData[] memory _execData,
     uint256 _usdPerGasUnit
   ) {
-    assumeNoPrecompiles(address(_automationVault));
-    vm.assume(address(_automationVault) != address(vm));
+    assumeNotPrecompile(address(_automationVault));
+    assumeNotForgeAddress(address(_automationVault));
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.exec.selector), abi.encode());
 
     vm.assume(_execData.length > 0 && _execData.length < 30);

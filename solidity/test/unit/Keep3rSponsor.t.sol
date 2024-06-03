@@ -315,12 +315,12 @@ contract UnitKeep3rSponsorExec is Keep3rSponsorUnitTest {
     vm.assume(_execData.length > 0 && _execData.length < 5);
     vm.assume(_automationVault != IAutomationVault(address(0)));
 
-    assumeNoPrecompiles(address(_automationVault));
+    assumeNotPrecompile(address(_automationVault));
 
     // Clean the array to avoid duplicates
     for (uint256 _i; _i < _execData.length; ++_i) {
       _cleanJobs.add(_execData[_i].job);
-      assumeNoPrecompiles(_execData[_i].job);
+      assumeNotPrecompile(_execData[_i].job);
     }
 
     keep3rSponsor.addSponsorJobsForTest(_cleanJobs.values());

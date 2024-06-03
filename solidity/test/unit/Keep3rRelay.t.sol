@@ -33,7 +33,7 @@ contract UnitKeep3rRelayExec is Keep3rRelayUnitTest {
     IAutomationVault _automationVault,
     IAutomationVault.ExecData[] memory _execData
   ) {
-    assumeNoPrecompiles(address(_automationVault));
+    assumeNotPrecompile(address(_automationVault));
     vm.assume(address(_automationVault) != address(vm));
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.exec.selector), abi.encode());
 

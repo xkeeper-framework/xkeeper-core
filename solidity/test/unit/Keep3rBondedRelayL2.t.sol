@@ -67,6 +67,8 @@ contract Keep3rBondedRelayL2UnitTest is Test {
 
 contract UnitKeep3rBondedRelayL2SetUsdPerUnit is Keep3rBondedRelayL2UnitTest {
   modifier happyPath(IAutomationVault _automationVault, uint256 _usdPerGasUnit) {
+    assumeNotPrecompile(address(_automationVault));
+    assumeNotForgeAddress(address(_automationVault));
     vm.assume(_usdPerGasUnit > 0);
     vm.startPrank(owner);
 
@@ -106,7 +108,8 @@ contract UnitKeep3rBondedRelayL2SetAutomationVaultRequirements is Keep3rBondedRe
     IAutomationVault _automationVault,
     IKeep3rBondedRelay.Requirements memory _requirements
   ) {
-    vm.assume(address(_automationVault) != address(vm));
+    assumeNotPrecompile(address(_automationVault));
+    assumeNotForgeAddress(address(_automationVault));
     vm.assume(
       _requirements.bond > address(0) && _requirements.minBond > 0 && _requirements.earned > 0 && _requirements.age > 0
     );
@@ -162,8 +165,8 @@ contract UnitKeep3rBondedRelayL2Exec is Keep3rBondedRelayL2UnitTest {
     IAutomationVault.ExecData[] memory _execData,
     IKeep3rBondedRelay.Requirements memory _requirements
   ) {
-    assumeNoPrecompiles(address(_automationVault));
-    vm.assume(address(_automationVault) != address(vm));
+    assumeNotPrecompile(address(_automationVault));
+    assumeNotForgeAddress(address(_automationVault));
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.exec.selector), abi.encode());
     vm.assume(
       _requirements.bond > address(0) && _requirements.minBond > 0 && _requirements.earned > 0 && _requirements.age > 0

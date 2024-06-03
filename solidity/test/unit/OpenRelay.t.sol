@@ -50,7 +50,7 @@ contract UnitOpenRelayExec is OpenRelayUnitTest {
   modifier happyPath(IAutomationVault _automationVault, IAutomationVault.ExecData[] memory _execData) {
     vm.assume(_execData.length > 0);
 
-    assumeNoPrecompiles(address(_automationVault));
+    assumeNotPrecompile(address(_automationVault));
     vm.assume(address(_automationVault) != address(vm));
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.exec.selector), abi.encode());
 
