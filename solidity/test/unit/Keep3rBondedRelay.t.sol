@@ -116,6 +116,7 @@ contract UnitKeep3rBondedRelayExec is Keep3rBondedRelayUnitTest {
     IKeep3rBondedRelay.Requirements memory _requirements
   ) {
     assumeNotPrecompile(address(_automationVault));
+    assumeNotForgeAddress(address(_automationVault));
     vm.assume(address(_automationVault) != address(vm));
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.exec.selector), abi.encode());
     vm.assume(

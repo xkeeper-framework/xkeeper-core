@@ -51,6 +51,7 @@ contract UnitOpenRelayExec is OpenRelayUnitTest {
     vm.assume(_execData.length > 0);
 
     assumeNotPrecompile(address(_automationVault));
+    assumeNotForgeAddress(address(_automationVault));
     vm.assume(address(_automationVault) != address(vm));
     vm.mockCall(address(_automationVault), abi.encodeWithSelector(IAutomationVault.exec.selector), abi.encode());
 

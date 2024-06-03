@@ -869,14 +869,17 @@ contract UnitAutomationVaultExec is AutomationVaultUnitTest {
     for (uint256 _i; _i < _execData.length; ++_i) {
       automationVault.addJobSelectorForTest(_relay, _execData[_i].job, bytes4(_execData[_i].jobData));
       assumeNotPrecompile(_execData[_i].job);
+      assumeNotForgeAddress(_execData[_i].job);
       vm.assume(_execData[_i].job != address(vm));
       vm.mockCall(_execData[_i].job, abi.encodeWithSelector(bytes4(_execData[_i].jobData)), abi.encode());
     }
 
     for (uint256 _i; _i < _feeData.length; ++_i) {
       assumeNotPrecompile(_feeData[_i].feeRecipient);
+      assumeNotForgeAddress(_feeData[_i].feeRecipient);
       assumePayable(_feeData[_i].feeRecipient);
       assumeNotPrecompile(_feeData[_i].feeToken);
+      assumeNotForgeAddress(_feeData[_i].feeToken);
       vm.assume(_feeData[_i].feeToken != address(vm));
       vm.mockCall(_feeData[_i].feeToken, abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
     }
