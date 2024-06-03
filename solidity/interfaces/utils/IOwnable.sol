@@ -5,7 +5,6 @@ pragma solidity 0.8.19;
  * @title  IOwnable
  * @notice This contract is used to manage ownership
  */
-
 interface IOwnable {
   /*///////////////////////////////////////////////////////////////
                               EVENTS  

@@ -154,7 +154,6 @@ interface IAutomationVault is IOwnable {
    * @notice Returns the address of the native token
    * @return _nativeToken The address of the native token
    */
-
   function NATIVE_TOKEN() external view returns (address _nativeToken);
 
   /**

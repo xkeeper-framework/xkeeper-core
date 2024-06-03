@@ -11,7 +11,6 @@ import {Ownable} from '../utils/Ownable.sol';
  * @title  Keep3rSponsor
  * @notice This contract managed by Keep3r Network will sponsor some execution in determined jobs
  */
-
 contract Keep3rSponsor is IKeep3rSponsor, Ownable {
   using EnumerableSet for EnumerableSet.AddressSet;
 
