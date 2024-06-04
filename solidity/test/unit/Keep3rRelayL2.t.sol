@@ -46,19 +46,19 @@ contract Keep3rRelayL2UnitTest is Test {
 }
 
 contract UnitKeep3rRelayL2SetUsdPerUnit is Keep3rRelayL2UnitTest {
-  modifier happyPath(IAutomationVault _automationVault, uint256 _usdPerGasUnit) {
+  IAutomationVault public automationVault;
+
+  modifier happyPath(uint256 _usdPerGasUnit) {
     vm.assume(_usdPerGasUnit > 0);
     vm.startPrank(owner);
 
-    vm.mockCall(address(_automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(owner));
+    automationVault = IAutomationVault(makeAddr('automationVault'));
+
+    vm.mockCall(address(automationVault), abi.encodeWithSelector(IOwnable.owner.selector), abi.encode(owner));
     _;
   }
 
-  function testRevertIfNotVaultOwner(
-    IAutomationVault _automationVault,
-    uint256 _usdPerGasUnit,
-    address _notOwner
-  ) public happyPath(_automationVault, _usdPerGasUnit) {
+  function testRevertIfNotVaultOwner(uint256 _usdPerGasUnit, address _notOwner) public happyPath(_usdPerGasUnit) {
     vm.assume(owner != _notOwner);
 
     vm.expectRevert(
@@ -66,17 +66,14 @@ contract UnitKeep3rRelayL2SetUsdPerUnit is Keep3rRelayL2UnitTest {
     );
 
     changePrank(_notOwner);
-    keep3rRelayL2.setUsdPerGasUnit(_automationVault, _usdPerGasUnit);
+    keep3rRelayL2.setUsdPerGasUnit(automationVault, _usdPerGasUnit);
   }
 
-  function testEmitUsdPerGasUnitSetted(
-    IAutomationVault _automationVault,
-    uint256 _usdPerGasUnit
-  ) public happyPath(_automationVault, _usdPerGasUnit) {
+  function testEmitUsdPerGasUnitSetted(uint256 _usdPerGasUnit) public happyPath(_usdPerGasUnit) {
     vm.expectEmit();
-    emit UsdPerGasUnitSetted(_automationVault, _usdPerGasUnit);
+    emit UsdPerGasUnitSetted(automationVault, _usdPerGasUnit);
 
-    keep3rRelayL2.setUsdPerGasUnit(_automationVault, _usdPerGasUnit);
+    keep3rRelayL2.setUsdPerGasUnit(automationVault, _usdPerGasUnit);
   }
 }
 
