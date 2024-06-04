@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {CommonIntegrationTest} from '../integration/Common.t.sol';
+import {CommonIntegrationTest} from './Common.t.sol';
 
-import {IAutomationVault} from '../../interfaces/core/IAutomationVault.sol';
-import {IKeep3rV2} from '../../interfaces/external/IKeep3rV2.sol';
-import {IKeep3rHelper} from '../../interfaces/external/IKeep3rHelper.sol';
-import {IKeep3rV1} from '../../interfaces/external/IKeep3rV1.sol';
-import {IKeep3rBondedRelay} from '../../interfaces/relays/IKeep3rBondedRelay.sol';
-import {_KEEP3R_V2, _KEEP3R_HELPER, _KEEP3R_V1, _KEEP3R_GOVERNOR, _KP3R_WHALE} from './Constants.sol';
+import {IKeep3rJobWorkableRated} from '../../../interfaces/external/IKeep3rJobWorkableRated.sol';
 
-contract IntegrationKeep3rRelay is CommonIntegrationTest {
+import {IAutomationVault} from '../../../interfaces/core/IAutomationVault.sol';
+import {IKeep3rBondedRelay} from '../../../interfaces/relays/IKeep3rBondedRelayL2.sol';
+import {IKeep3rV2} from '../../../interfaces/external/IKeep3rV2.sol';
+import {IKeep3rHelper} from '../../../interfaces/external/IKeep3rHelper.sol';
+import {IKeep3rV1} from '../../../interfaces/external/IKeep3rV1.sol';
+import {_KEEP3R_V2_OP, _KEEP3R_HELPER_OP, _KEEP3R_V1_OP, _KEEP3R_GOVERNOR_OP, _KP3R_WHALE} from '../Constants.sol';
+
+contract IntegrationKeep3rRelayL2 is CommonIntegrationTest {
   // Events
   event KeeperValidation(uint256 _gasLeft);
   event KeeperWork(
@@ -30,10 +32,10 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
     CommonIntegrationTest.setUp();
 
     // Keep3r setup
-    keep3rGovernor = _KEEP3R_GOVERNOR;
-    keep3r = _KEEP3R_V2;
-    keep3rHelper = _KEEP3R_HELPER;
-    kp3r = _KEEP3R_V1;
+    keep3rGovernor = _KEEP3R_GOVERNOR_OP;
+    keep3r = IKeep3rV2(_KEEP3R_V2_OP);
+    keep3rHelper = IKeep3rHelper(_KEEP3R_HELPER_OP);
+    kp3r = IKeep3rV1(_KEEP3R_V1_OP);
 
     _addJobAndLiquidity(address(automationVault), 1000 ether);
 
@@ -44,27 +46,33 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
     // Keep3r selectors array
     bytes4[] memory _keep3rSelectors = new bytes4[](2);
     _keep3rSelectors[0] = keep3r.isKeeper.selector;
-    _keep3rSelectors[1] = keep3r.worked.selector;
+    _keep3rSelectors[1] = IKeep3rJobWorkableRated.worked.selector;
 
     // Job selectors array
     bytes4[] memory _jobSelectors = new bytes4[](2);
     _jobSelectors[0] = basicJob.work.selector;
     _jobSelectors[1] = basicJob.workHard.selector;
-    IKeep3rBondedRelay.Requirements memory _requirements = IKeep3rBondedRelay.Requirements(address(kp3r), 1 ether, 0, 0);
 
     // Job data array
     IAutomationVault.JobData[] memory _jobsData = new IAutomationVault.JobData[](2);
     _jobsData[0] = IAutomationVault.JobData(address(keep3r), _keep3rSelectors);
     _jobsData[1] = IAutomationVault.JobData(address(basicJob), _jobSelectors);
 
+    // Bonded requirements
+    IKeep3rBondedRelay.Requirements memory _requirements = IKeep3rBondedRelay.Requirements(address(kp3r), 0, 0, 0);
+
     vm.startPrank(owner);
 
-    // Keep3r bonded relay requirements setup
-    keep3rBondedRelay.setAutomationVaultRequirements(automationVault, _requirements);
+    // Keep3r bonded relay L2 requirements setup
+    keep3rBondedRelayL2.setAutomationVaultRequirements(automationVault, _requirements);
+
+    // UsdPerGasUnit setup
+    keep3rRelayL2.setUsdPerGasUnit(automationVault, 100_000);
+    keep3rBondedRelayL2.setUsdPerGasUnit(automationVault, 100_000);
 
     // AutomationVault approve relay data
-    automationVault.addRelay(address(keep3rRelay), _keepers, _jobsData);
-    automationVault.addRelay(address(keep3rBondedRelay), _keepers, _jobsData);
+    automationVault.addRelay(address(keep3rRelayL2), _keepers, _jobsData);
+    automationVault.addRelay(address(keep3rBondedRelayL2), _keepers, _jobsData);
   }
 
   function _addJobAndLiquidity(address _job, uint256 _amount) internal {
@@ -88,7 +96,7 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
     changePrank(bot);
   }
 
-  function test_executeJobKeep3r() public {
+  function test_executeJobKeep3rL2() public {
     // Bond and activate keep3r
     _bondAndActivateKeeper(bot, 0);
 
@@ -102,10 +110,10 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
     vm.expectEmit(true, true, true, false, address(keep3r));
     emit KeeperWork(address(kp3r), address(automationVault), bot, 0, 0);
 
-    keep3rRelay.exec(automationVault, _execData);
+    keep3rRelayL2.exec(automationVault, _execData);
   }
 
-  function test_executeAndGetPaymentFromKeep3r(uint64 _fee, uint8 _howHard) public {
+  function test_executeAndGetPaymentFromKeep3rL2(uint64 _fee, uint8 _howHard) public {
     vm.assume(_howHard > 20);
     vm.assume(_fee > 30 gwei && _fee < 200 gwei);
     vm.fee(_fee);
@@ -122,36 +130,21 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
       IAutomationVault.ExecData(address(basicJob), abi.encodeWithSelector(basicJob.workHard.selector, _howHard));
 
     // Initializes storage variables
-    keep3rRelay.exec(automationVault, _execData);
-    _payment = keep3r.bonds(bot, address(kp3r));
+    keep3rRelayL2.exec(automationVault, _execData);
+    uint256 _paymentBefore = keep3r.bonds(bot, address(kp3r));
 
     // Execure the job
-    uint256 _gasBeforeExec = gasleft();
-    keep3rRelay.exec(automationVault, _execData);
-    uint256 _gasAfterExec = gasleft();
+    keep3rRelayL2.exec(automationVault, _execData);
 
-    uint256 _minBaseFee = keep3rHelper.minBaseFee();
+    // Check that the keeper has bonded KP3R
+    uint256 _paymentAfter = keep3r.bonds(bot, address(kp3r));
 
-    // If the fee is lower than the base fee, use the base fee
-    uint256 _rewardedBaseFee = _minBaseFee > _fee ? _minBaseFee : block.basefee + keep3rHelper.minPriorityFee();
-
-    // Calculate the ETH spent by the keeper
-    uint256 _ethSpent = (_gasBeforeExec - _gasAfterExec) * _rewardedBaseFee;
-
-    // Calculate the payment in KP3R and after that quote to ETH
-    uint256 _paymentInKP3R = keep3r.bonds(bot, address(kp3r)) - _payment;
-    uint256 _oneEthToKp3rQuote = keep3rHelper.quote(1 ether);
-    uint256 _paymentInETH = _paymentInKP3R * 1 ether / _oneEthToKp3rQuote;
-
-    // Calculate the profit percentage
-    uint256 _profitPercentage = _paymentInETH * 100 / _ethSpent;
-
-    assertApproxEqAbs(_profitPercentage, 110, 5, 'the keeper should earn around 110% of the ETH cost in bonded KP3R');
+    assertGt(_paymentAfter, _paymentBefore);
   }
 
-  function test_executeJobBondedKeep3r() public {
+  function test_executeJobBondedKeep3rL2() public {
     // Bond and activate keep3r
-    _bondAndActivateKeeper(bot, keep3rHelper.targetBond());
+    _bondAndActivateKeeper(bot, 0);
 
     IAutomationVault.ExecData[] memory _execData = new IAutomationVault.ExecData[](1);
     _execData[0] = IAutomationVault.ExecData(address(basicJob), abi.encodeWithSelector(basicJob.work.selector));
@@ -162,50 +155,35 @@ contract IntegrationKeep3rRelay is CommonIntegrationTest {
     vm.expectEmit(true, true, true, false, address(keep3r));
     emit KeeperWork(address(kp3r), address(automationVault), bot, 0, 0);
 
-    keep3rBondedRelay.exec(automationVault, _execData);
+    keep3rBondedRelayL2.exec(automationVault, _execData);
   }
 
-  function test_executeBondAndGetPaymentFromKeep3r(uint64 _fee, uint8 _howHard) public {
+  function test_executeAndGetPaymentFromKeep3rBondedL2(uint64 _fee, uint8 _howHard) public {
     vm.assume(_howHard > 20);
     vm.assume(_fee > 30 gwei && _fee < 200 gwei);
     vm.fee(_fee);
 
     // Bond and activate keep3r
-    _bondAndActivateKeeper(bot, keep3rHelper.targetBond());
+    _bondAndActivateKeeper(bot, 0);
 
-    // Check that the keeper has bonded KP3R
+    // Check that the keeper has no bonded KP3R
     uint256 _payment = keep3r.bonds(bot, address(kp3r));
-    assertEq(_payment, keep3rHelper.targetBond());
+    assertEq(_payment, 0);
 
     IAutomationVault.ExecData[] memory _execData = new IAutomationVault.ExecData[](1);
     _execData[0] =
       IAutomationVault.ExecData(address(basicJob), abi.encodeWithSelector(basicJob.workHard.selector, _howHard));
 
     // Initializes storage variables
-    keep3rBondedRelay.exec(automationVault, _execData);
-    _payment = keep3r.bonds(bot, address(kp3r));
+    keep3rBondedRelayL2.exec(automationVault, _execData);
+    uint256 _paymentBefore = keep3r.bonds(bot, address(kp3r));
 
     // Execure the job
-    uint256 _gasBeforeExec = gasleft();
-    keep3rBondedRelay.exec(automationVault, _execData);
-    uint256 _gasAfterExec = gasleft();
+    keep3rBondedRelayL2.exec(automationVault, _execData);
 
-    uint256 _minBaseFee = keep3rHelper.minBaseFee();
+    // Check that the keeper has bonded KP3R
+    uint256 _paymentAfter = keep3r.bonds(bot, address(kp3r));
 
-    // If the fee is lower than the base fee, use the base fee
-    uint256 _rewardedBaseFee = _minBaseFee > _fee ? _minBaseFee : block.basefee + keep3rHelper.minPriorityFee();
-
-    // Calculate the ETH spent by the keeper
-    uint256 _ethSpent = (_gasBeforeExec - _gasAfterExec) * _rewardedBaseFee;
-
-    // Calculate the payment in KP3R and after that quote to ETH
-    uint256 _paymentInKP3R = keep3r.bonds(bot, address(kp3r)) - _payment;
-    uint256 _oneEthToKp3rQuote = keep3rHelper.quote(1 ether);
-    uint256 _paymentInETH = _paymentInKP3R * 1 ether / _oneEthToKp3rQuote;
-
-    // Calculate the profit percentage
-    uint256 _profitPercentage = _paymentInETH * 100 / _ethSpent;
-
-    assertApproxEqAbs(_profitPercentage, 120, 5, 'the keeper should earn around 120% of the ETH cost in bonded KP3R');
+    assertGt(_paymentAfter, _paymentBefore);
   }
 }

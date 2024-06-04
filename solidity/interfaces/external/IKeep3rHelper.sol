@@ -72,6 +72,16 @@ interface IKeep3rHelper is IKeep3rHelperParameters {
   /// @return _amount The amount of KP3R that should be awarded to tx.origin
   function getRewardAmount(uint256 _gasUsed) external view returns (uint256 _amount);
 
+  /// @notice Get multiplier, quote, and extra, in order to calculate keeper payment
+  /// @param _bonds Amount of bonded KP3R owned by the keeper
+  /// @return _boost Multiplier per gas unit. Takes into account the base fee and the amount of bonded KP3R
+  /// @return _oneEthQuote Amount of KP3R tokens equivalent to 1 ETH
+  /// @return _extra Amount of extra gas that should be added to the gas spent
+  function getPaymentParams(uint256 _bonds)
+    external
+    view
+    returns (uint256 _boost, uint256 _oneEthQuote, uint256 _extra);
+
   /// @notice Given a pool address, returns the underlying tokens of the pair
   /// @param _pool Address of the correspondant pool
   /// @return _token0 Address of the first token of the pair
