@@ -84,16 +84,11 @@ abstract contract Deploy is Script {
   }
 }
 
-struct PredeploymentData {
-  string rpc;
-  IAutomate gelatoAutomate;
-}
-
 contract DeployEthereumMainnet is Deploy {
   function setUp() public {
     // Deployer setup
     _deployerPk = vm.envUint('DEPLOYER_PK');
-    owner = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    owner = 0x000000000000000000000000000000000000dEaD;
 
     // Chain specific setup
     gelatoAutomate = IAutomate(0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0);
@@ -107,11 +102,11 @@ contract DeployEthereumSepolia is Deploy {
   function setUp() public {
     // Deployer setup
     _deployerPk = vm.envUint('DEPLOYER_PK');
-    owner = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    owner = 0x000000000000000000000000000000000000dEaD;
 
     // Chain specific setup
     gelatoAutomate = IAutomate(0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0);
-    keep3rV2 = IKeep3rV2(0xf171B63F97018ADff9Bb15F065c6B6CDA378d320);
+    keep3rV2 = IKeep3rV2(0xbC855B9Ad7398360999Bd176edBC98EB53F9E26F);
     isMainnet = true;
 
     vm.createSelectFork(vm.envString('ETHEREUM_SEPOLIA_RPC'));
@@ -122,7 +117,7 @@ contract DeployPolygonMainnet is Deploy {
   function setUp() public {
     // Deployer setup
     _deployerPk = vm.envUint('DEPLOYER_PK');
-    owner = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    owner = 0x000000000000000000000000000000000000dEaD;
 
     // Chain specific setup
     gelatoAutomate = IAutomate(0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0);
@@ -137,7 +132,7 @@ contract DeployOptimismMainnet is Deploy {
   function setUp() public {
     // Deployer setup
     _deployerPk = vm.envUint('DEPLOYER_PK');
-    owner = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    owner = 0x000000000000000000000000000000000000dEaD;
 
     // Chain specific setup
     gelatoAutomate = IAutomate(0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0);
@@ -152,7 +147,7 @@ contract DeployOptimismSepolia is Deploy {
   function setUp() public {
     // Deployer setup
     _deployerPk = vm.envUint('DEPLOYER_PK');
-    owner = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    owner = 0x000000000000000000000000000000000000dEaD;
 
     // Chain specific setup
     gelatoAutomate = IAutomate(0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0);
